@@ -1,0 +1,22 @@
+{
+  "Group": "AstryxRPG",
+  "Name": "AstryxParty",
+  "Version": "1.0.0",
+  "Description": "Create and manage parties with friends. Features party HUD with health, stamina & distance tracking, compass markers, and customizable display settings.",
+  "Authors": [
+    {
+      "Name": "Vinny"
+    }
+  ],
+  "Website": "astryxrpg.com",
+  "ServerVersion": "*",
+  "Dependencies": {
+
+  },
+  "OptionalDependencies": {
+    "Buuz135:MultipleHUD": "*"
+  },
+  "DisabledByDefault": false,
+  "Main": "com.astryxrpg.party.AstryxParty",
+  "IncludesAssetPack": true
+}
