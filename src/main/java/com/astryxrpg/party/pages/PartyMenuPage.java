@@ -530,37 +530,41 @@ public class PartyMenuPage extends InteractiveCustomUIPage<PartyMenuEventData> {
             this.currentView = PartyMenuPage.ViewState.PARTY_VIEW;
          }
 
-         switch (this.currentView) {
-            case NO_PARTY_VIEW:
-               this.buildNoPartyView(cmd, events);
-               break;
-            case CREATE_PARTY_VIEW:
-               this.buildCreatePartyView(cmd, events);
-               break;
-            case PARTY_VIEW:
-               this.buildPartyView(cmd, events, playerUuid, party);
-               break;
-            case SETTINGS_VIEW:
-               this.buildSettingsView(cmd, events, party);
-               break;
-            case MY_SETTINGS_VIEW:
-               this.buildMySettingsView(cmd, events, party);
-               break;
-            case INVITE_VIEW:
-               this.buildInvitePlayersView(cmd, events, playerUuid);
-               break;
-            case PLAYER_ACTION_VIEW:
-               this.buildPlayerActionView(cmd, events, playerUuid, party);
-               break;
-            case INVITES_LIST_VIEW:
-               this.buildInvitesListView(cmd, events, playerUuid);
-               break;
-            case ENTER_PASSWORD_VIEW:
-               this.buildPasswordEntryView(cmd, events);
-               break;
-            case JOIN_REQUEST_VIEW:
-               this.buildJoinRequestsView(cmd, events, party);
-         }
+          switch (this.currentView) {
+             case NO_PARTY_VIEW:
+                this.buildNoPartyView(cmd, events);
+                break;
+             case CREATE_PARTY_VIEW:
+                this.buildCreatePartyView(cmd, events);
+                break;
+             case PARTY_VIEW:
+                this.buildPartyView(cmd, events, playerUuid, party);
+                break;
+             case SETTINGS_VIEW:
+                this.buildSettingsView(cmd, events, party);
+                break;
+             case MY_SETTINGS_VIEW:
+                this.buildMySettingsView(cmd, events, party);
+                break;
+             case INVITE_VIEW:
+                this.buildInvitePlayersView(cmd, events, playerUuid);
+                break;
+             case PLAYER_ACTION_VIEW:
+                this.buildPlayerActionView(cmd, events, playerUuid, party);
+                break;
+             case INVITES_LIST_VIEW:
+                this.buildInvitesListView(cmd, events, playerUuid);
+                break;
+             case ENTER_PASSWORD_VIEW:
+                this.buildPasswordEntryView(cmd, events);
+                break;
+             case JOIN_REQUEST_VIEW:
+                this.buildJoinRequestsView(cmd, events, party);
+                break;
+             case CONFIRMATION_VIEW:
+                this.buildConfirmView(cmd);
+                break;
+          }
       }
    }
 
