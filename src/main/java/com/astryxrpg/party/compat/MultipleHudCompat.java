@@ -18,10 +18,10 @@ public class MultipleHudCompat {
          try {
             Class.forName("com.buuz135.mhud.MultipleHUD");
             available = true;
-            ((Api)LOGGER.atInfo()).log("[PartyMod] MultipleHUD detected - using multi-HUD compatibility mode");
+            ((Api)LOGGER.atInfo()).log("[AstryxParty] MultipleHUD detected - using multi-HUD compatibility mode");
          } catch (ClassNotFoundException e) {
             available = false;
-            ((Api)LOGGER.atInfo()).log("[PartyMod] MultipleHUD not found - using native HUD mode");
+            ((Api)LOGGER.atInfo()).log("[AstryxParty] MultipleHUD not found - using native HUD mode");
          }
       }
 

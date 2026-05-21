@@ -28,7 +28,7 @@ public class AstryxParty extends JavaPlugin {
    public AstryxParty(@Nonnull JavaPluginInit init) {
       super(init);
       instance = this;
-      ((Api)LOGGER.atInfo()).log("PartyMod loaded");
+      ((Api)LOGGER.atInfo()).log("AstryxParty loaded");
    }
 
     protected void setup() {
@@ -40,7 +40,7 @@ public class AstryxParty extends JavaPlugin {
       this.partyManager = new PartyManager();
       this.getCommandRegistry().registerCommand(new PartyCommand(this));
       this.registerTicker();
-      ((Api)LOGGER.atInfo()).log("PartyMod setup complete");
+      ((Api)LOGGER.atInfo()).log("AstryxParty setup complete");
    }
 
    private void registerTicker() {
@@ -86,7 +86,7 @@ public class AstryxParty extends JavaPlugin {
       PlayerHudSettings.save();
       PartyEventBus.clearListeners();
       PartyStorage.close();
-      ((Api)LOGGER.atInfo()).log("PartyMod shutdown complete");
+      ((Api)LOGGER.atInfo()).log("AstryxParty shutdown complete");
    }
 
    @Nonnull

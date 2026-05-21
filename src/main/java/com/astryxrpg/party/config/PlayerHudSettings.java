@@ -19,14 +19,14 @@ import javax.annotation.Nonnull;
 
 public class PlayerHudSettings {
    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
-   private static final String CONFIG_PATH = "mods/PartyMod/player_hud_settings.json";
+   private static final String CONFIG_PATH = "mods/AstryxParty/player_hud_settings.json";
    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
    private static final Map<UUID, PlayerHudSettings.HudSettings> playerSettings = new ConcurrentHashMap<>();
    private static boolean loaded = false;
 
    public static void load() {
       if (!loaded) {
-         Path path = Paths.get("mods/PartyMod/player_hud_settings.json");
+         Path path = Paths.get("mods/AstryxParty/player_hud_settings.json");
          if (Files.exists(path)) {
             try (Reader reader = Files.newBufferedReader(path)) {
                Type type = (new TypeToken<Map<UUID, PlayerHudSettings.HudSettings>>() {}).getType();
@@ -47,7 +47,7 @@ public class PlayerHudSettings {
 
    public static void save() {
       try {
-         Path path = Paths.get("mods/PartyMod/player_hud_settings.json");
+         Path path = Paths.get("mods/AstryxParty/player_hud_settings.json");
          Files.createDirectories(path.getParent());
 
          try (Writer writer = Files.newBufferedWriter(path)) {
