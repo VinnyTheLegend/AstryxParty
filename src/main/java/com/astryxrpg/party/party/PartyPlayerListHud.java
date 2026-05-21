@@ -61,32 +61,38 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       ((Api)LOGGER.atInfo()).log("PartyPlayerListHud shutdown");
    }
 
-   public void removeFakeMembersFromHud(@Nonnull Party party) {
-      Set<UUID> fakeMemberUuids = party.getFakeMembers().keySet();
-      if (!fakeMemberUuids.isEmpty()) {
-         ((Api)LOGGER.atInfo()).log("[DEBUG] removeFakeMembersFromHud: Removing %d fake members from HUD", fakeMemberUuids.size());
+    public void removeFakeMembersFromHud(@Nonnull Party party) {
+       Set<UUID> fakeMemberUuids = party.getFakeMembers().keySet();
+       if (!fakeMemberUuids.isEmpty()) {
+          ((Api)LOGGER.atInfo()).log("[DEBUG] removeFakeMembersFromHud: Removing %d fake members from HUD", fakeMemberUuids.size());
 
-         for (UUID memberUuid : party.getMemberUuids()) {
-            PartyPlayerListHud.ViewerHudState viewerState = this.viewerStates.get(memberUuid);
-            if (viewerState != null) {
-               for (UUID fakeUuid : fakeMemberUuids) {
-                  viewerState.memberStates.remove(fakeUuid);
-                  if (viewerState.hudInstance != null) {
-                     try {
-                        viewerState.hudInstance.removeMember(fakeUuid);
-                     } catch (Exception e) {
-                        ((Api)((Api)LOGGER.atWarning()).withCause(e)).log("Error removing fake member from HUD display");
-                     }
-                  }
-               }
+           for (UUID memberUuid : party.getMemberUuids()) {
+              if (memberUuid == null) {
+                 continue;
+              }
+              PartyPlayerListHud.ViewerHudState viewerState = this.viewerStates.get(memberUuid);
+              if (viewerState != null) {
+                 for (UUID fakeUuid : fakeMemberUuids) {
+                    if (fakeUuid == null) {
+                       continue;
+                    }
+                    viewerState.memberStates.remove(fakeUuid);
+                    if (viewerState.hudInstance != null) {
+                       try {
+                          viewerState.hudInstance.removeMember(fakeUuid);
+                       } catch (Exception e) {
+                          ((Api)((Api)LOGGER.atWarning()).withCause(e)).log("Error removing fake member from HUD display");
+                       }
+                    }
+                 }
 
-               this.updateHudVisibility(memberUuid, party);
-            }
-         }
+                 this.updateHudVisibility(memberUuid, party);
+              }
+           }
 
-         ((Api)LOGGER.atInfo()).log("[DEBUG] removeFakeMembersFromHud: Completed");
-      }
-   }
+          ((Api)LOGGER.atInfo()).log("[DEBUG] removeFakeMembersFromHud: Completed");
+       }
+    }
 
    public static void setMinMembersForHud(int min) {
       minMembersForHud = Math.max(1, min);
@@ -182,21 +188,24 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
 
       this.viewerStates.remove(leavingPlayerUuid);
       if (party != null) {
-         for (UUID memberUuid : party.getMemberUuids()) {
-            PartyPlayerListHud.ViewerHudState memberState = this.viewerStates.get(memberUuid);
-            if (memberState != null) {
-               memberState.memberStates.remove(leavingPlayerUuid);
-               if (memberState.hudInstance != null) {
-                  try {
-                     memberState.hudInstance.removeMember(leavingPlayerUuid);
-                  } catch (Exception e) {
-                     ((Api)((Api)LOGGER.atWarning()).withCause(e)).log("Error removing member from HUD display");
-                  }
-               }
-            }
+       for (UUID memberUuid : party.getMemberUuids()) {
+          if (memberUuid == null) {
+             continue;
+          }
+          PartyPlayerListHud.ViewerHudState memberState = this.viewerStates.get(memberUuid);
+          if (memberState != null) {
+             memberState.memberStates.remove(leavingPlayerUuid);
+             if (memberState.hudInstance != null) {
+                try {
+                   memberState.hudInstance.removeMember(leavingPlayerUuid);
+                } catch (Exception e) {
+                   ((Api)((Api)LOGGER.atWarning()).withCause(e)).log("Error removing member from HUD display");
+                }
+             }
+          }
 
-            this.updateHudVisibility(memberUuid, party);
-         }
+          this.updateHudVisibility(memberUuid, party);
+       }
       }
    }
 
@@ -336,21 +345,21 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       }
    }
 
-   public void tick(float dt, int index, Store<EntityStore> store) {
-      float cappedDt = Math.min(dt, 1.0F);
-      this.accumulator += cappedDt;
-      this.cleanupAccumulator += cappedDt;
-      if (this.cleanupAccumulator >= 3.0F) {
-         this.cleanupAccumulator = 0.0F;
-         this.cleanupOfflinePlayerStates();
-      }
+    public void tick(float dt, int index, Store<EntityStore> store) {
+       float cappedDt = Math.min(dt, STAT_UPDATE_INTERVAL);
+       this.accumulator += cappedDt;
+       this.cleanupAccumulator += cappedDt;
+       if (this.cleanupAccumulator >= CLEANUP_INTERVAL) {
+          this.cleanupAccumulator = 0.0F;
+          this.cleanupOfflinePlayerStates();
+       }
 
-      if (this.accumulator >= 1.0F) {
-         this.accumulator = 0.0F;
-         this.checkForMissingHuds();
-         this.updateAllMemberStats(store);
-      }
-   }
+       if (this.accumulator >= STAT_UPDATE_INTERVAL) {
+          this.accumulator = 0.0F;
+          this.checkForMissingHuds();
+          this.updateAllMemberStats(store);
+       }
+    }
 
    private void checkForMissingHuds() {
       PartyManager partyManager = AstryxParty.getInstance().getPartyManager();
@@ -751,27 +760,27 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       }
    }
 
-   private Player getMemberPlayerSafe(PlayerRef memberRef, World viewerWorld) {
-      Player memberPlayer = (Player)memberRef.getComponent(Player.getComponentType());
-      if (memberPlayer == null) {
-         return null;
-      }
+    private Player getMemberPlayerSafe(@Nonnull PlayerRef memberRef, @Nonnull World viewerWorld) {
+       Player memberPlayer = (Player)memberRef.getComponent(Player.getComponentType());
+       if (memberPlayer == null) {
+          return null;
+       }
 
-      World memberWorld = memberPlayer.getWorld();
-      return memberWorld != null && viewerWorld.equals(memberWorld) ? memberPlayer : null;
-   }
+       World memberWorld = memberPlayer.getWorld();
+       return memberWorld != null && viewerWorld.equals(memberWorld) ? memberPlayer : null;
+    }
 
-   private EntityStatMap getEntityStatMapSafe(PlayerRef memberRef, World viewerWorld) {
-      Player memberPlayer = (Player)memberRef.getComponent(Player.getComponentType());
-      if (memberPlayer == null) {
-         return null;
-      }
+    private @Nullable EntityStatMap getEntityStatMapSafe(@Nonnull PlayerRef memberRef, @Nonnull World viewerWorld) {
+       Player memberPlayer = (Player)memberRef.getComponent(Player.getComponentType());
+       if (memberPlayer == null) {
+          return null;
+       }
 
-      World memberWorld = memberPlayer.getWorld();
-      return memberWorld != null && viewerWorld.equals(memberWorld)
-         ? (EntityStatMap)memberRef.getComponent(EntityStatsModule.get().getEntityStatMapComponentType())
-         : null;
-   }
+       World memberWorld = memberPlayer.getWorld();
+       return memberWorld != null && viewerWorld.equals(memberWorld)
+          ? (EntityStatMap)memberRef.getComponent(EntityStatsModule.get().getEntityStatMapComponentType())
+          : null;
+    }
 
    private static class MemberHudState {
       final UUID memberUuid;
@@ -822,8 +831,8 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       PartyMemberHud hudInstance;
       final Map<UUID, PartyPlayerListHud.MemberHudState> memberStates = new ConcurrentHashMap<>();
 
-      ViewerHudState(@Nonnull UUID viewerUuid) {
-         this.viewerUuid = viewerUuid;
-      }
-   }
+       ViewerHudState(@Nonnull UUID viewerUuid) {
+          this.viewerUuid = viewerUuid;
+       }
+    }
 }

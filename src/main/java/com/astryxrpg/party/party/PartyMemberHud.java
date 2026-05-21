@@ -205,6 +205,7 @@ public class PartyMemberHud extends CustomUIHud {
    }
 
    public static class MemberDisplayData {
+      @Nonnull
       public volatile String name;
       public volatile float health;
       public volatile float maxHealth;
@@ -213,7 +214,7 @@ public class PartyMemberHud extends CustomUIHud {
       public volatile int distance;
       public volatile boolean online;
 
-      public MemberDisplayData(String name) {
+      public MemberDisplayData(@Nonnull String name) {
          this.name = name;
          this.health = 100.0F;
          this.maxHealth = 100.0F;

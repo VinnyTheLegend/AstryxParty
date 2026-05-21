@@ -7,10 +7,12 @@ import javax.annotation.Nullable;
 import com.astryxrpg.party.party.Party;
 
 public class PartyLeaveEvent extends PartyEvent {
-   private final Party party;
-   private final String partyId;
-   private final UUID leavingPlayerUuid;
-   private final boolean wasKicked;
+    private final Party party;
+    @Nonnull
+    private final String partyId;
+    @Nonnull
+    private final UUID leavingPlayerUuid;
+    private final boolean wasKicked;
 
    public PartyLeaveEvent(@Nullable Party party, @Nonnull String partyId, @Nonnull UUID leavingPlayerUuid, boolean wasKicked) {
       this.party = party;

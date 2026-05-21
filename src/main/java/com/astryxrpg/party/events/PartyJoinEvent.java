@@ -6,8 +6,10 @@ import javax.annotation.Nonnull;
 import com.astryxrpg.party.party.Party;
 
 public class PartyJoinEvent extends PartyEvent {
-   private final Party party;
-   private final UUID joiningPlayerUuid;
+    @Nonnull
+    private final Party party;
+    @Nonnull
+    private final UUID joiningPlayerUuid;
 
    public PartyJoinEvent(@Nonnull Party party, @Nonnull UUID joiningPlayerUuid) {
       this.party = party;
