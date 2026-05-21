@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import javax.annotation.Nonnull;
 
 public class AstryxParty extends JavaPlugin {
