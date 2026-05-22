@@ -85,10 +85,10 @@ public class PartyMarkerTicker extends TickingSystem<EntityStore> {
                Set<String> currentMarkerIds = new HashSet<>();
                List<MapMarker> markersToSend = new ArrayList<>();
 
-               for (UUID memberUuid : party.getMembersExcept(viewerUuid)) {
-                  PlayerRef memberRef = Universe.get().getPlayer(memberUuid);
-                  if (memberRef != null) {
-                     Player memberPlayer = this.getMemberPlayerSafe(memberRef, viewerWorld);
+for (UUID memberUuid : party.getMembersExcept(viewerUuid)) {
+                   PlayerRef memberRef = Universe.get().getPlayer(memberUuid);
+                   if (memberRef != null) {
+                      Player memberPlayer = this.getMemberPlayerSafe(memberRef, viewerWorld, store);
                      if (memberPlayer != null) {
                         TransformComponent transform = memberPlayer.getTransformComponent();
                         if (transform != null) {
@@ -190,15 +190,15 @@ public class PartyMarkerTicker extends TickingSystem<EntityStore> {
       }
    }
 
-   private Player getMemberPlayerSafe(PlayerRef memberRef, World viewerWorld) {
-      Player memberPlayer = (Player)memberRef.getComponent(Player.getComponentType());
-      if (memberPlayer == null) {
-         return null;
-      }
+private Player getMemberPlayerSafe(PlayerRef memberRef, World viewerWorld, Store<EntityStore> store) {
+       Player memberPlayer = (Player)store.getComponent(memberRef.getReference(), Player.getComponentType());
+       if (memberPlayer == null) {
+          return null;
+       }
 
-      World memberWorld = memberPlayer.getWorld();
-      return memberWorld != null && viewerWorld.equals(memberWorld) ? memberPlayer : null;
-   }
+       World memberWorld = memberPlayer.getWorld();
+       return memberWorld != null && viewerWorld.equals(memberWorld) ? memberPlayer : null;
+    }
 
    private void removeAllMarkersForPlayer(UUID playerUuid, PlayerRef playerRef) {
       Map<String, PartyMarkerTicker.MarkerState> existingMarkerStates = this.displayedMarkers.remove(playerUuid);

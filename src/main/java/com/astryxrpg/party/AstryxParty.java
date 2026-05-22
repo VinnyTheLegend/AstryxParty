@@ -1,12 +1,15 @@
 package com.astryxrpg.party;
 
 import com.astryxrpg.party.commands.PartyCommand;
-import com.astryxrpg.party.config.PlayerHudSettings;
+import com.astryxrpg.party.config.PartySettingsComponent;
 import com.astryxrpg.party.events.PartyEventBus;
 import com.astryxrpg.party.markers.PartyMarkerTicker;
 import com.astryxrpg.party.party.PartyManager;
 import com.astryxrpg.party.party.PartyPlayerListHud;
 import com.astryxrpg.party.party.PartyStorage;
+import com.astryxrpg.party.systems.PlayerJoinSystem;
+import com.hypixel.hytale.component.ComponentType;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.logger.HytaleLogger.Api;
 import com.hypixel.hytale.server.core.asset.common.CommonAssetModule;
@@ -18,6 +21,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.annotation.Nonnull;
+import com.hypixel.hytale.component.AddReason;
 
 public class AstryxParty extends JavaPlugin {
    private static AstryxParty instance;
@@ -31,11 +35,15 @@ public class AstryxParty extends JavaPlugin {
       ((Api)LOGGER.atInfo()).log("AstryxParty loaded");
    }
 
-    protected void setup() {
+   protected void setup() {
       PartyStorage.init();
       ((Api)LOGGER.atInfo()).log("PartyStorage initialized");
 
-      PlayerHudSettings.load();
+      ComponentType<EntityStore, PartySettingsComponent> hudSettingsComponentType =
+          this.getEntityStoreRegistry()
+              .registerComponent(PartySettingsComponent.class, "PartySettings", PartySettingsComponent.CODEC);
+      PartySettingsComponent.setComponentType(hudSettingsComponentType);
+
       this.registerPartyMemberIcon();
       this.partyManager = new PartyManager();
       this.getCommandRegistry().registerCommand(new PartyCommand(this));
@@ -43,7 +51,9 @@ public class AstryxParty extends JavaPlugin {
       ((Api)LOGGER.atInfo()).log("AstryxParty setup complete");
    }
 
-   private void registerTicker() {
+private void registerTicker() {
+       this.getEntityStoreRegistry().registerSystem(new PlayerJoinSystem());
+       ((Api)LOGGER.atInfo()).log("Registered PlayerJoinSystem as RefSystem");
       this.getEntityStoreRegistry().registerSystem(PartyMarkerTicker.getInstance());
       ((Api)LOGGER.atInfo()).log("Registered PartyMarkerTicker as TickingSystem");
       PartyPlayerListHud.getInstance().init();
@@ -83,7 +93,6 @@ public class AstryxParty extends JavaPlugin {
 
    protected void shutdown() {
       PartyPlayerListHud.getInstance().shutdown();
-      PlayerHudSettings.save();
       PartyEventBus.clearListeners();
       PartyStorage.close();
       ((Api)LOGGER.atInfo()).log("AstryxParty shutdown complete");

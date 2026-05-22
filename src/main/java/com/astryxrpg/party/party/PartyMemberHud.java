@@ -1,11 +1,13 @@
 package com.astryxrpg.party.party;
 
-import com.astryxrpg.party.config.PlayerHudSettings;
+import com.astryxrpg.party.config.PartySettings;
+import com.astryxrpg.party.config.PartySettingsComponent;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.logger.HytaleLogger.Api;
 import com.hypixel.hytale.server.core.entity.entities.player.hud.CustomUIHud;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.Universe;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -131,27 +133,31 @@ public class PartyMemberHud extends CustomUIHud {
       }
    }
 
-   public void pushUpdate() {
-      if (!this.hudInitialized) {
-         this.pendingUpdate = true;
-      } else {
-         PlayerHudSettings.HudSettings settings = PlayerHudSettings.get(this.viewerUuid);
-         synchronized (this) {
-            this.reusableMembersToShow.clear();
-            synchronized (this.memberOrder) {
-               this.reusableMembersToShow.addAll(this.memberOrder);
-            }
+public void pushUpdate() {
+       if (!this.hudInitialized) {
+          this.pendingUpdate = true;
+       } else {
+          com.hypixel.hytale.server.core.universe.PlayerRef viewerRef = com.hypixel.hytale.server.core.universe.Universe.get().getPlayer(this.viewerUuid);
+          PartySettingsComponent settings = viewerRef != null ? viewerRef.getComponent(PartySettingsComponent.getComponentType()) : null;
+          if (settings == null) {
+             settings = new PartySettingsComponent();
+          }
+          synchronized (this) {
+             this.reusableMembersToShow.clear();
+             synchronized (this.memberOrder) {
+                this.reusableMembersToShow.addAll(this.memberOrder);
+             }
 
-            if (!settings.showSelf) {
-               this.reusableMembersToShow.remove(this.viewerUuid);
-            }
+             if (!settings.getShowSelf()) {
+                this.reusableMembersToShow.remove(this.viewerUuid);
+             }
 
-            if (settings.orderMode == PlayerHudSettings.OrderMode.DISTANCE) {
-               this.reusableMembersToShow.sort(this.distanceComparator);
-            }
+             if (settings.getOrderMode() == PartySettings.OrderMode.DISTANCE) {
+                this.reusableMembersToShow.sort(this.distanceComparator);
+             }
 
-            int limit = Math.min(settings.maxDisplayedMembers, 8);
-            this.reusableOnlineMembers.clear();
+             int limit = Math.min(settings.getMaxDisplayedMembers(), 8);
+             this.reusableOnlineMembers.clear();
 
             for (UUID uuid : this.reusableMembersToShow) {
                PartyMemberHud.MemberDisplayData data = this.memberData.get(uuid);

@@ -1,7 +1,8 @@
 package com.astryxrpg.party.pages;
 
 import com.astryxrpg.party.AstryxParty;
-import com.astryxrpg.party.config.PlayerHudSettings;
+import com.astryxrpg.party.config.PartySettings;
+import com.astryxrpg.party.config.PartySettingsComponent;
 import com.astryxrpg.party.party.Party;
 import com.astryxrpg.party.party.PartyAccessType;
 import com.astryxrpg.party.party.PartyInvite;
@@ -43,7 +44,7 @@ public class PartyMenuPage extends InteractiveCustomUIPage<PartyMenuEventData> {
    private boolean mySettingsShowHud = true;
    private boolean mySettingsShowSelf = true;
    private int mySettingsMaxDisplayed = 8;
-   private PlayerHudSettings.OrderMode mySettingsOrderMode = PlayerHudSettings.OrderMode.FIXED;
+   private PartySettings.OrderMode mySettingsOrderMode = PartySettings.OrderMode.FIXED;
 
    public PartyMenuPage(@Nonnull PlayerRef playerRef, @Nonnull AstryxParty plugin) {
       super(playerRef, CustomPageLifetime.CanDismiss, PartyMenuEventData.CODEC);
@@ -180,7 +181,7 @@ public class PartyMenuPage extends InteractiveCustomUIPage<PartyMenuEventData> {
             break;
          case "setOrderMode":
             if (target != null) {
-               this.mySettingsOrderMode = PlayerHudSettings.OrderMode.valueOf(target);
+               this.mySettingsOrderMode = PartySettings.OrderMode.valueOf(target);
                this.refreshUI(ref, store);
             }
             break;
@@ -471,21 +472,28 @@ public class PartyMenuPage extends InteractiveCustomUIPage<PartyMenuEventData> {
       }
    }
 
-   private void loadMySettingsFromConfig() {
-      PlayerHudSettings.HudSettings settings = PlayerHudSettings.get(this.playerRef.getUuid());
-      this.mySettingsShowHud = settings.showHud;
-      this.mySettingsShowSelf = settings.showSelf;
-      this.mySettingsMaxDisplayed = settings.maxDisplayedMembers;
-      this.mySettingsOrderMode = settings.orderMode;
-   }
+private void loadMySettingsFromConfig() {
+        PartySettingsComponent settings = this.playerRef.getComponent(PartySettingsComponent.getComponentType());
+        if (settings == null) {
+           settings = new PartySettingsComponent();
+        }
+        this.mySettingsShowHud = settings.getShowHud();
+        this.mySettingsShowSelf = settings.getShowSelf();
+        this.mySettingsMaxDisplayed = settings.getMaxDisplayedMembers();
+        this.mySettingsOrderMode = settings.getOrderMode();
+     }
 
-   private void saveMySettingsToConfig() {
-      PlayerHudSettings.HudSettings settings = new PlayerHudSettings.HudSettings(
-         this.mySettingsShowHud, this.mySettingsShowSelf, this.mySettingsMaxDisplayed, this.mySettingsOrderMode
-      );
-      PlayerHudSettings.update(this.playerRef.getUuid(), settings);
-      PartyPlayerListHud.getInstance().refreshHudForPlayer(this.playerRef.getUuid());
-   }
+     private void saveMySettingsToConfig() {
+        PartySettingsComponent settings = this.playerRef.getComponent(PartySettingsComponent.getComponentType());
+        if (settings == null) {
+           settings = new PartySettingsComponent();
+        }
+        settings.setShowHud(this.mySettingsShowHud);
+        settings.setShowSelf(this.mySettingsShowSelf);
+        settings.setMaxDisplayedMembers(this.mySettingsMaxDisplayed);
+        settings.setOrderMode(this.mySettingsOrderMode);
+        PartyPlayerListHud.getInstance().refreshHudForPlayer(this.playerRef.getUuid());
+     }
 
    private void buildContent(@Nonnull UICommandBuilder cmd, @Nonnull UIEventBuilder events) {
       UUID playerUuid = this.playerRef.getUuid();
@@ -711,11 +719,11 @@ public class PartyMenuPage extends InteractiveCustomUIPage<PartyMenuEventData> {
       cmd.set("#ShowSelfToggle.Text", this.mySettingsShowSelf ? "Enabled" : "Disabled");
       cmd.set("#ShowSelfCheck.Visible", this.mySettingsShowSelf);
       cmd.set("#HudMaxValue.Text", String.valueOf(this.mySettingsMaxDisplayed));
-      cmd.set("#OrderFixedCheck.Visible", this.mySettingsOrderMode == PlayerHudSettings.OrderMode.FIXED);
-      cmd.set("#OrderDistanceCheck.Visible", this.mySettingsOrderMode == PlayerHudSettings.OrderMode.DISTANCE);
+      cmd.set("#OrderFixedCheck.Visible", this.mySettingsOrderMode == PartySettings.OrderMode.FIXED);
+      cmd.set("#OrderDistanceCheck.Visible", this.mySettingsOrderMode == PartySettings.OrderMode.DISTANCE);
       boolean showWarning = party != null
          && party.getMemberCount() > this.mySettingsMaxDisplayed
-         && this.mySettingsOrderMode != PlayerHudSettings.OrderMode.DISTANCE;
+         && this.mySettingsOrderMode != PartySettings.OrderMode.DISTANCE;
       cmd.set("#HudCapacityWarning.Visible", showWarning);
    }
 
