@@ -45,6 +45,23 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
    private static final float CLEANUP_INTERVAL = 3.0F;
    private static int minMembersForHud = 1;
    private final Map<UUID, PartyPlayerListHud.ViewerHudState> viewerStates = new ConcurrentHashMap<>();
+   private final Map<UUID, PartyPlayerListHud.PlayerStatsSnapshot> playerStatsCache = new ConcurrentHashMap<>();
+
+   private static class PlayerStatsSnapshot {
+      final float health;
+      final float maxHealth;
+      final float stamina;
+      final float maxStamina;
+      final long timestamp;
+
+      PlayerStatsSnapshot(float health, float maxHealth, float stamina, float maxStamina) {
+         this.health = health;
+         this.maxHealth = maxHealth;
+         this.stamina = stamina;
+         this.maxStamina = maxStamina;
+         this.timestamp = System.currentTimeMillis();
+      }
+   }
 
    private PartyPlayerListHud() {
    }
@@ -58,11 +75,12 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       ((Api) LOGGER.atInfo()).log("PartyPlayerListHud initialized and registered with event bus");
    }
 
-   public void shutdown() {
-      PartyEventBus.unregister(this);
-      this.viewerStates.clear();
-      ((Api) LOGGER.atInfo()).log("PartyPlayerListHud shutdown");
-   }
+public void shutdown() {
+       PartyEventBus.unregister(this);
+       this.viewerStates.clear();
+       this.playerStatsCache.clear();
+       ((Api) LOGGER.atInfo()).log("PartyPlayerListHud shutdown");
+    }
 
    public void removeFakeMembersFromHud(@Nonnull Party party) {
       Set<UUID> fakeMemberUuids = party.getFakeMembers().keySet();
@@ -420,24 +438,51 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       }
    }
 
-   public void tick(float dt, int index, Store<EntityStore> store) {
-      float cappedDt = Math.min(dt, STAT_UPDATE_INTERVAL);
-      this.accumulator += cappedDt;
-      this.cleanupAccumulator += cappedDt;
-      if (this.cleanupAccumulator >= CLEANUP_INTERVAL) {
-         this.cleanupAccumulator = 0.0F;
-         this.cleanupOfflinePlayerStates();
-      }
+public void tick(float dt, int index, Store<EntityStore> store) {
+       float cappedDt = Math.min(dt, STAT_UPDATE_INTERVAL);
+       this.accumulator += cappedDt;
+       this.cleanupAccumulator += cappedDt;
+       if (this.cleanupAccumulator >= CLEANUP_INTERVAL) {
+          this.cleanupAccumulator = 0.0F;
+          this.cleanupOfflinePlayerStates();
+       }
 
-      if (this.accumulator >= STAT_UPDATE_INTERVAL) {
-         this.accumulator = 0.0F;
-         World currentWorld = ((EntityStore) store.getExternalData()).getWorld();
-         if (currentWorld != null) {
-            this.checkForMissingHuds(currentWorld, store);
-         }
-         this.updateAllMemberStats(store);
-      }
-   }
+       if (this.accumulator >= STAT_UPDATE_INTERVAL) {
+          this.accumulator = 0.0F;
+          World currentWorld = ((EntityStore) store.getExternalData()).getWorld();
+          if (currentWorld != null) {
+             this.broadcastPlayerStats(currentWorld, store);
+             this.checkForMissingHuds(currentWorld, store);
+          }
+          this.updateAllMemberStats(store);
+       }
+    }
+
+    private void broadcastPlayerStats(@Nonnull World world, @Nonnull Store<EntityStore> store) {
+       for (Player player : world.getPlayers()) {
+          UUID playerUuid = player.getUuid();
+          float health = 100.0F;
+          float maxHealth = 100.0F;
+          float stamina = 100.0F;
+          float maxStamina = 100.0F;
+          EntityStatMap stats = (EntityStatMap) store.getComponent(player.getReference(), EntityStatsModule.get().getEntityStatMapComponentType());
+          if (stats != null) {
+             int healthIndex = DefaultEntityStatTypes.getHealth();
+             int staminaIndex = DefaultEntityStatTypes.getStamina();
+             EntityStatValue healthStat = stats.get(healthIndex);
+             EntityStatValue staminaStat = stats.get(staminaIndex);
+             if (healthStat != null) {
+                health = healthStat.get();
+                maxHealth = healthStat.getMax();
+             }
+             if (staminaStat != null) {
+                stamina = staminaStat.get();
+                maxStamina = staminaStat.getMax();
+             }
+          }
+          this.playerStatsCache.put(playerUuid, new PartyPlayerListHud.PlayerStatsSnapshot(health, maxHealth, stamina, maxStamina));
+       }
+    }
 
    private void checkForMissingHuds(@Nonnull World world, @Nonnull Store<EntityStore> store) {
       PartyManager partyManager = AstryxParty.getInstance().getPartyManager();
@@ -560,43 +605,43 @@ private void updateMemberStatsForViewer(
    }
 
 private void updateSingleMemberStats(
-          @Nonnull PlayerRef viewerRef,
-          @Nonnull PartyPlayerListHud.MemberHudState memberState,
-          double viewerX,
-          double viewerY,
-          double viewerZ,
-          @Nonnull World currentWorld,
-          @Nonnull Store<EntityStore> store) {
+           @Nonnull PlayerRef viewerRef,
+           @Nonnull PartyPlayerListHud.MemberHudState memberState,
+           double viewerX,
+           double viewerY,
+           double viewerZ,
+           @Nonnull World currentWorld,
+           @Nonnull Store<EntityStore> store) {
        UUID memberUuid = memberState.memberUuid;
        PlayerRef memberRef = Universe.get().getPlayer(memberUuid);
        boolean online = memberRef != null;
        String name = online ? memberRef.getUsername() : memberState.lastName;
-       float health = 0.0F;
-       float maxHealth = 0.0F;
-       float stamina = 0.0F;
-       float maxStamina = 0.0F;
-       int distance = 0;
-if (online) {
-           Player memberPlayer = this.getMemberPlayerSafe(memberRef, currentWorld);
-           if (memberPlayer != null) {
-              EntityStatMap stats = this.getEntityStatMapSafe(memberRef, currentWorld);
-              if (stats != null) {
-                 int healthIndex = DefaultEntityStatTypes.getHealth();
-                 int staminaIndex = DefaultEntityStatTypes.getStamina();
-                 EntityStatValue healthStat = stats.get(healthIndex);
-                 EntityStatValue staminaStat = stats.get(staminaIndex);
-                 if (healthStat != null) {
-                    health = healthStat.get();
-                    maxHealth = healthStat.getMax();
-                 }
+       float health = memberState.lastHealth;
+       float maxHealth = memberState.lastMaxHealth;
+       float stamina = memberState.lastStamina;
+       float maxStamina = memberState.lastMaxStamina;
+       int distance = -1;
+       if (online) {
+          Player memberPlayer = this.getMemberPlayerSafe(memberRef, currentWorld);
+          if (memberPlayer != null) {
+             EntityStatMap stats = this.getEntityStatMapSafe(memberRef, currentWorld);
+             if (stats != null) {
+                int healthIndex = DefaultEntityStatTypes.getHealth();
+                int staminaIndex = DefaultEntityStatTypes.getStamina();
+                EntityStatValue healthStat = stats.get(healthIndex);
+                EntityStatValue staminaStat = stats.get(staminaIndex);
+                if (healthStat != null) {
+                   health = healthStat.get();
+                   maxHealth = healthStat.getMax();
+                }
 
-                 if (staminaStat != null) {
-                    stamina = staminaStat.get();
-                    maxStamina = staminaStat.getMax();
-                 }
-              }
+                if (staminaStat != null) {
+                   stamina = staminaStat.get();
+                   maxStamina = staminaStat.getMax();
+                }
+             }
 
-              TransformComponent transform = this.getMemberTransformSafe(memberRef, currentWorld);
+             TransformComponent transform = this.getMemberTransformSafe(memberRef, currentWorld);
              if (transform != null) {
                 double memberX = transform.getTransform().getPosition().getX();
                 double memberY = transform.getTransform().getPosition().getY();
@@ -606,15 +651,23 @@ if (online) {
                 double dz = memberZ - viewerZ;
                 distance = (int) Math.sqrt(dx * dx + dy * dy + dz * dz);
              }
+          } else {
+             PartyPlayerListHud.PlayerStatsSnapshot cached = this.playerStatsCache.get(memberUuid);
+             if (cached != null) {
+                health = cached.health;
+                maxHealth = cached.maxHealth;
+                stamina = cached.stamina;
+                maxStamina = cached.maxStamina;
+             }
           }
        }
 
-      if (memberState.hasChanged(health, maxHealth, stamina, maxStamina, distance, online, name)) {
-         memberState.update(health, maxHealth, stamina, maxStamina, distance, online, name);
-         this.sendMemberStatUpdate(viewerRef, memberUuid, name, health, maxHealth, stamina, maxStamina, distance,
-               online);
-      }
-   }
+       if (memberState.hasChanged(health, maxHealth, stamina, maxStamina, distance, online, name)) {
+          memberState.update(health, maxHealth, stamina, maxStamina, distance, online, name);
+          this.sendMemberStatUpdate(viewerRef, memberUuid, name, health, maxHealth, stamina, maxStamina, distance,
+                online);
+       }
+    }
 
    private boolean updateSingleMemberBars(
          @Nonnull PlayerRef viewerRef, @Nonnull PartyPlayerListHud.MemberHudState memberState, double viewerX,
@@ -782,25 +835,25 @@ if (online) {
       }
    }
 
-   private void populateSingleMemberData(
-         @Nonnull PlayerRef viewerRef,
-         @Nonnull PartyPlayerListHud.MemberHudState memberState,
-         double viewerX,
-         double viewerY,
-         double viewerZ,
-         @Nonnull World currentWorld,
-         @Nonnull Store<EntityStore> store) {
-      UUID memberUuid = memberState.memberUuid;
-      PlayerRef memberRef = Universe.get().getPlayer(memberUuid);
-      boolean online = memberRef != null;
-      String name = online ? memberRef.getUsername()
-            : (memberState.lastName.isEmpty() ? "Offline" : memberState.lastName);
-      float health = 0.0F;
-      float maxHealth = 0.0F;
-      float stamina = 0.0F;
-      float maxStamina = 0.0F;
-      int distance = 0;
-if (online) {
+private void populateSingleMemberData(
+          @Nonnull PlayerRef viewerRef,
+          @Nonnull PartyPlayerListHud.MemberHudState memberState,
+          double viewerX,
+          double viewerY,
+          double viewerZ,
+          @Nonnull World currentWorld,
+          @Nonnull Store<EntityStore> store) {
+       UUID memberUuid = memberState.memberUuid;
+       PlayerRef memberRef = Universe.get().getPlayer(memberUuid);
+       boolean online = memberRef != null;
+       String name = online ? memberRef.getUsername()
+             : (memberState.lastName.isEmpty() ? "Offline" : memberState.lastName);
+       float health = memberState.lastHealth;
+       float maxHealth = memberState.lastMaxHealth;
+       float stamina = memberState.lastStamina;
+       float maxStamina = memberState.lastMaxStamina;
+       int distance = -1;
+       if (online) {
           Player memberPlayer = this.getMemberPlayerSafe(memberRef, currentWorld);
           if (memberPlayer != null) {
              EntityStatMap stats = this.getEntityStatMapSafe(memberRef, currentWorld);
@@ -830,6 +883,14 @@ if (online) {
                 double dz = memberZ - viewerZ;
                 distance = (int) Math.sqrt(dx * dx + dy * dy + dz * dz);
              }
+          } else {
+             PartyPlayerListHud.PlayerStatsSnapshot cached = this.playerStatsCache.get(memberUuid);
+             if (cached != null) {
+                health = cached.health;
+                maxHealth = cached.maxHealth;
+                stamina = cached.stamina;
+                maxStamina = cached.maxStamina;
+             }
           }
        }
 
@@ -837,25 +898,24 @@ if (online) {
        this.sendMemberStatUpdate(viewerRef, memberUuid, name, health, maxHealth, stamina, maxStamina, distance, online);
     }
 
-   private void populateFakeMemberData(
-         @Nonnull PlayerRef viewerRef,
-         @Nonnull PartyPlayerListHud.MemberHudState memberState,
-         @Nonnull FakeMember fakeMember,
-         double viewerX,
-         double viewerY,
-         double viewerZ) {
-      String name = fakeMember.getName();
-      float health = 100.0F;
-      float maxHealth = 100.0F;
-      float stamina = 100.0F;
-      float maxStamina = 100.0F;
-      double dx = fakeMember.getX() - viewerX;
-      double dy = fakeMember.getY() - viewerY;
-      double dz = fakeMember.getZ() - viewerZ;
-      int distance = (int) Math.sqrt(dx * dx + dy * dy + dz * dz);
-      memberState.update(health, maxHealth, stamina, maxStamina, distance, true, name);
-this.sendMemberStatUpdate(viewerRef, fakeMember.getUuid(), name, health, maxHealth, stamina, maxStamina, distance,
-            true);
+private void populateFakeMemberData(
+          @Nonnull PlayerRef viewerRef,
+          @Nonnull PartyPlayerListHud.MemberHudState memberState,
+          @Nonnull FakeMember fakeMember,
+          double viewerX,
+          double viewerY,
+          double viewerZ) {
+       String name = fakeMember.getName();
+       float health = 100.0F;
+       float maxHealth = 100.0F;
+       float stamina = 100.0F;
+       float maxStamina = 100.0F;
+       double dx = fakeMember.getX() - viewerX;
+       double dy = fakeMember.getY() - viewerY;
+       double dz = fakeMember.getZ() - viewerZ;
+       int distance = (int) Math.sqrt(dx * dx + dy * dy + dz * dz);
+       memberState.update(health, maxHealth, stamina, maxStamina, distance, true, name);
+       this.sendMemberStatUpdate(viewerRef, fakeMember.getUuid(), name, health, maxHealth, stamina, maxStamina, distance, true);
     }
 
     private void forceUpdateForParty(@Nonnull Party party) {
@@ -863,10 +923,6 @@ this.sendMemberStatUpdate(viewerRef, fakeMember.getUuid(), name, health, maxHeal
           PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(memberUuid);
           if (state != null) {
              for (PartyPlayerListHud.MemberHudState memberState : state.memberStates.values()) {
-                memberState.lastHealth = -1.0F;
-                memberState.lastMaxHealth = -1.0F;
-                memberState.lastStamina = -1.0F;
-                memberState.lastMaxStamina = -1.0F;
                 memberState.lastDistance = -1;
              }
           }
@@ -912,29 +968,29 @@ this.sendMemberStatUpdate(viewerRef, fakeMember.getUuid(), name, health, maxHeal
        return (TransformComponent) memberStore.getComponent(memberRefObj, TransformComponent.getComponentType());
     }
 
-   private static class MemberHudState {
-      final UUID memberUuid;
-      float lastHealth;
-      float lastMaxHealth;
-      float lastStamina;
-      float lastMaxStamina;
-      int lastDistance;
-      boolean lastOnline;
-      String lastName;
+private static class MemberHudState {
+       final UUID memberUuid;
+       float lastHealth;
+       float lastMaxHealth;
+       float lastStamina;
+       float lastMaxStamina;
+       int lastDistance;
+       boolean lastOnline;
+       String lastName;
 
-      MemberHudState(@Nonnull UUID memberUuid) {
-         this.memberUuid = memberUuid;
-         this.lastHealth = -1.0F;
-         this.lastMaxHealth = -1.0F;
-         this.lastStamina = -1.0F;
-         this.lastMaxStamina = -1.0F;
-         this.lastDistance = -1;
-         this.lastOnline = false;
-         this.lastName = "";
-      }
+       MemberHudState(@Nonnull UUID memberUuid) {
+          this.memberUuid = memberUuid;
+          this.lastHealth = 100.0F;
+          this.lastMaxHealth = 100.0F;
+          this.lastStamina = 100.0F;
+          this.lastMaxStamina = 100.0F;
+          this.lastDistance = -1;
+          this.lastOnline = false;
+          this.lastName = "";
+       }
 
-      boolean hasChanged(float health, float maxHealth, float stamina, float maxStamina, int distance, boolean online,
-            String name) {
+       boolean hasChanged(float health, float maxHealth, float stamina, float maxStamina, int distance, boolean online,
+             String name) {
          return Math.abs(health - this.lastHealth) > 0.1F
                || Math.abs(maxHealth - this.lastMaxHealth) > 0.1F
                || Math.abs(stamina - this.lastStamina) > 0.1F
