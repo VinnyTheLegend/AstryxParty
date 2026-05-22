@@ -525,11 +525,11 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       }
    }
 
-   private void updateMemberStatsForViewer(
-         @Nonnull PartyPlayerListHud.ViewerHudState viewerState, @Nonnull PlayerRef viewerRef, @Nonnull Player viewer,
-         @Nonnull World currentWorld, @Nonnull Store<EntityStore> store) {
-      UUID viewerUuid = viewerState.viewerUuid;
-      TransformComponent viewerTransform = viewer.getTransformComponent();
+private void updateMemberStatsForViewer(
+          @Nonnull PartyPlayerListHud.ViewerHudState viewerState, @Nonnull PlayerRef viewerRef, @Nonnull Player viewer,
+          @Nonnull World currentWorld, @Nonnull Store<EntityStore> store) {
+       UUID viewerUuid = viewerState.viewerUuid;
+       TransformComponent viewerTransform = (TransformComponent) store.getComponent(viewerRef.getReference(), TransformComponent.getComponentType());
       if (viewerTransform != null) {
          double viewerX = viewerTransform.getTransform().getPosition().getX();
          double viewerY = viewerTransform.getTransform().getPosition().getY();
@@ -559,55 +559,55 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       }
    }
 
-   private void updateSingleMemberStats(
-         @Nonnull PlayerRef viewerRef,
-         @Nonnull PartyPlayerListHud.MemberHudState memberState,
-         double viewerX,
-         double viewerY,
-         double viewerZ,
-         @Nonnull World currentWorld,
-         @Nonnull Store<EntityStore> store) {
-      UUID memberUuid = memberState.memberUuid;
-      PlayerRef memberRef = Universe.get().getPlayer(memberUuid);
-      boolean online = memberRef != null;
-      String name = online ? memberRef.getUsername() : memberState.lastName;
-      float health = 0.0F;
-      float maxHealth = 0.0F;
-      float stamina = 0.0F;
-      float maxStamina = 0.0F;
-      int distance = 0;
-      if (online) {
-         Player memberPlayer = this.getMemberPlayerSafe(memberRef, currentWorld, store);
-         if (memberPlayer != null) {
-            EntityStatMap stats = this.getEntityStatMapSafe(memberRef, currentWorld, store);
-            if (stats != null) {
-               int healthIndex = DefaultEntityStatTypes.getHealth();
-               int staminaIndex = DefaultEntityStatTypes.getStamina();
-               EntityStatValue healthStat = stats.get(healthIndex);
-               EntityStatValue staminaStat = stats.get(staminaIndex);
-               if (healthStat != null) {
-                  health = healthStat.get();
-                  maxHealth = healthStat.getMax();
-               }
+private void updateSingleMemberStats(
+          @Nonnull PlayerRef viewerRef,
+          @Nonnull PartyPlayerListHud.MemberHudState memberState,
+          double viewerX,
+          double viewerY,
+          double viewerZ,
+          @Nonnull World currentWorld,
+          @Nonnull Store<EntityStore> store) {
+       UUID memberUuid = memberState.memberUuid;
+       PlayerRef memberRef = Universe.get().getPlayer(memberUuid);
+       boolean online = memberRef != null;
+       String name = online ? memberRef.getUsername() : memberState.lastName;
+       float health = 0.0F;
+       float maxHealth = 0.0F;
+       float stamina = 0.0F;
+       float maxStamina = 0.0F;
+       int distance = 0;
+if (online) {
+           Player memberPlayer = this.getMemberPlayerSafe(memberRef, currentWorld);
+           if (memberPlayer != null) {
+              EntityStatMap stats = this.getEntityStatMapSafe(memberRef, currentWorld);
+              if (stats != null) {
+                 int healthIndex = DefaultEntityStatTypes.getHealth();
+                 int staminaIndex = DefaultEntityStatTypes.getStamina();
+                 EntityStatValue healthStat = stats.get(healthIndex);
+                 EntityStatValue staminaStat = stats.get(staminaIndex);
+                 if (healthStat != null) {
+                    health = healthStat.get();
+                    maxHealth = healthStat.getMax();
+                 }
 
-               if (staminaStat != null) {
-                  stamina = staminaStat.get();
-                  maxStamina = staminaStat.getMax();
-               }
-            }
+                 if (staminaStat != null) {
+                    stamina = staminaStat.get();
+                    maxStamina = staminaStat.getMax();
+                 }
+              }
 
-            TransformComponent transform = memberPlayer.getTransformComponent();
-            if (transform != null) {
-               double memberX = transform.getTransform().getPosition().getX();
-               double memberY = transform.getTransform().getPosition().getY();
-               double memberZ = transform.getTransform().getPosition().getZ();
-               double dx = memberX - viewerX;
-               double dy = memberY - viewerY;
-               double dz = memberZ - viewerZ;
-               distance = (int) Math.sqrt(dx * dx + dy * dy + dz * dz);
-            }
-         }
-      }
+              TransformComponent transform = this.getMemberTransformSafe(memberRef, currentWorld);
+             if (transform != null) {
+                double memberX = transform.getTransform().getPosition().getX();
+                double memberY = transform.getTransform().getPosition().getY();
+                double memberZ = transform.getTransform().getPosition().getZ();
+                double dx = memberX - viewerX;
+                double dy = memberY - viewerY;
+                double dz = memberZ - viewerZ;
+                distance = (int) Math.sqrt(dx * dx + dy * dy + dz * dz);
+             }
+          }
+       }
 
       if (memberState.hasChanged(health, maxHealth, stamina, maxStamina, distance, online, name)) {
          memberState.update(health, maxHealth, stamina, maxStamina, distance, online, name);
@@ -747,9 +747,9 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
          World currentWorld = viewer.getWorld();
          if (currentWorld == null) {
             ((Api) LOGGER.atInfo()).log("[DEBUG] populateMemberDataForViewer: world is null, skipping");
-         } else {
-            TransformComponent viewerTransform = viewer.getTransformComponent();
-            if (viewerTransform == null) {
+} else {
+             TransformComponent viewerTransform = (TransformComponent) store.getComponent(viewerRef.getReference(), TransformComponent.getComponentType());
+             if (viewerTransform == null) {
                ((Api) LOGGER.atInfo()).log("[DEBUG] populateMemberDataForViewer: transform is null, skipping");
             } else {
                double viewerX = viewerTransform.getTransform().getPosition().getX();
@@ -800,42 +800,42 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       float stamina = 0.0F;
       float maxStamina = 0.0F;
       int distance = 0;
-      if (online) {
-         Player memberPlayer = this.getMemberPlayerSafe(memberRef, currentWorld, store);
-         if (memberPlayer != null) {
-            EntityStatMap stats = this.getEntityStatMapSafe(memberRef, currentWorld, store);
-            if (stats != null) {
-               int healthIndex = DefaultEntityStatTypes.getHealth();
-               int staminaIndex = DefaultEntityStatTypes.getStamina();
-               EntityStatValue healthStat = stats.get(healthIndex);
-               EntityStatValue staminaStat = stats.get(staminaIndex);
-               if (healthStat != null) {
-                  health = healthStat.get();
-                  maxHealth = healthStat.getMax();
-               }
+if (online) {
+          Player memberPlayer = this.getMemberPlayerSafe(memberRef, currentWorld);
+          if (memberPlayer != null) {
+             EntityStatMap stats = this.getEntityStatMapSafe(memberRef, currentWorld);
+             if (stats != null) {
+                int healthIndex = DefaultEntityStatTypes.getHealth();
+                int staminaIndex = DefaultEntityStatTypes.getStamina();
+                EntityStatValue healthStat = stats.get(healthIndex);
+                EntityStatValue staminaStat = stats.get(staminaIndex);
+                if (healthStat != null) {
+                   health = healthStat.get();
+                   maxHealth = healthStat.getMax();
+                }
 
-               if (staminaStat != null) {
-                  stamina = staminaStat.get();
-                  maxStamina = staminaStat.getMax();
-               }
-            }
+                if (staminaStat != null) {
+                   stamina = staminaStat.get();
+                   maxStamina = staminaStat.getMax();
+                }
+             }
 
-            TransformComponent transform = memberPlayer.getTransformComponent();
-            if (transform != null) {
-               double memberX = transform.getTransform().getPosition().getX();
-               double memberY = transform.getTransform().getPosition().getY();
-               double memberZ = transform.getTransform().getPosition().getZ();
-               double dx = memberX - viewerX;
-               double dy = memberY - viewerY;
-               double dz = memberZ - viewerZ;
-               distance = (int) Math.sqrt(dx * dx + dy * dy + dz * dz);
-            }
-         }
-      }
+             TransformComponent transform = this.getMemberTransformSafe(memberRef, currentWorld);
+             if (transform != null) {
+                double memberX = transform.getTransform().getPosition().getX();
+                double memberY = transform.getTransform().getPosition().getY();
+                double memberZ = transform.getTransform().getPosition().getZ();
+                double dx = memberX - viewerX;
+                double dy = memberY - viewerY;
+                double dz = memberZ - viewerZ;
+                distance = (int) Math.sqrt(dx * dx + dy * dy + dz * dz);
+             }
+          }
+       }
 
-      memberState.update(health, maxHealth, stamina, maxStamina, distance, online, name);
-      this.sendMemberStatUpdate(viewerRef, memberUuid, name, health, maxHealth, stamina, maxStamina, distance, online);
-   }
+       memberState.update(health, maxHealth, stamina, maxStamina, distance, online, name);
+       this.sendMemberStatUpdate(viewerRef, memberUuid, name, health, maxHealth, stamina, maxStamina, distance, online);
+    }
 
    private void populateFakeMemberData(
          @Nonnull PlayerRef viewerRef,
@@ -854,49 +854,63 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       double dz = fakeMember.getZ() - viewerZ;
       int distance = (int) Math.sqrt(dx * dx + dy * dy + dz * dz);
       memberState.update(health, maxHealth, stamina, maxStamina, distance, true, name);
-      this.sendMemberStatUpdate(viewerRef, fakeMember.getUuid(), name, health, maxHealth, stamina, maxStamina, distance,
+this.sendMemberStatUpdate(viewerRef, fakeMember.getUuid(), name, health, maxHealth, stamina, maxStamina, distance,
             true);
-   }
+    }
 
-   private void forceUpdateForParty(@Nonnull Party party) {
-      for (UUID memberUuid : party.getMemberUuids()) {
-         PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(memberUuid);
-         if (state != null) {
-            for (PartyPlayerListHud.MemberHudState memberState : state.memberStates.values()) {
-               memberState.lastHealth = -1.0F;
-               memberState.lastMaxHealth = -1.0F;
-               memberState.lastStamina = -1.0F;
-               memberState.lastMaxStamina = -1.0F;
-               memberState.lastDistance = -1;
-            }
-         }
-      }
-   }
+    private void forceUpdateForParty(@Nonnull Party party) {
+       for (UUID memberUuid : party.getMemberUuids()) {
+          PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(memberUuid);
+          if (state != null) {
+             for (PartyPlayerListHud.MemberHudState memberState : state.memberStates.values()) {
+                memberState.lastHealth = -1.0F;
+                memberState.lastMaxHealth = -1.0F;
+                memberState.lastStamina = -1.0F;
+                memberState.lastMaxStamina = -1.0F;
+                memberState.lastDistance = -1;
+             }
+          }
+       }
+    }
 
-   private Player getMemberPlayerSafe(@Nonnull PlayerRef memberRef, @Nonnull World viewerWorld,
-         @Nonnull Store<EntityStore> store) {
-      Player memberPlayer = (Player) store.getComponent(memberRef.getReference(), Player.getComponentType());
-      if (memberPlayer == null) {
-         return null;
-      }
+    private Player getMemberPlayerSafe(@Nonnull PlayerRef memberRef, @Nonnull World viewerWorld) {
+       Ref<EntityStore> memberRefObj = memberRef.getReference();
+       Store<EntityStore> memberStore = memberRefObj.getStore();
+       if (memberStore == null) {
+          return null;
+       }
+       World memberWorld = memberStore.getExternalData().getWorld();
+       if (memberWorld == null || !viewerWorld.equals(memberWorld)) {
+          return null;
+       }
+       return (Player) memberStore.getComponent(memberRefObj, Player.getComponentType());
+    }
 
-      World memberWorld = memberPlayer.getWorld();
-      return memberWorld != null && viewerWorld.equals(memberWorld) ? memberPlayer : null;
-   }
+    private @Nullable EntityStatMap getEntityStatMapSafe(@Nonnull PlayerRef memberRef, @Nonnull World viewerWorld) {
+       Ref<EntityStore> memberRefObj = memberRef.getReference();
+       Store<EntityStore> memberStore = memberRefObj.getStore();
+       if (memberStore == null) {
+          return null;
+       }
+       World memberWorld = memberStore.getExternalData().getWorld();
+       if (memberWorld == null || !viewerWorld.equals(memberWorld)) {
+          return null;
+       }
+       return (EntityStatMap) memberStore.getComponent(memberRefObj, EntityStatsModule.get().getEntityStatMapComponentType());
+    }
 
-   private @Nullable EntityStatMap getEntityStatMapSafe(@Nonnull PlayerRef memberRef, @Nonnull World viewerWorld,
-         @Nonnull Store<EntityStore> store) {
-      Player memberPlayer = (Player) store.getComponent(memberRef.getReference(), Player.getComponentType());
-      if (memberPlayer == null) {
-         return null;
-      }
-
-      World memberWorld = memberPlayer.getWorld();
-      return memberWorld != null && viewerWorld.equals(memberWorld)
-            ? (EntityStatMap) store.getComponent(memberRef.getReference(),
-                  EntityStatsModule.get().getEntityStatMapComponentType())
-            : null;
-   }
+    private @Nullable TransformComponent getMemberTransformSafe(@Nonnull PlayerRef memberRef, @Nonnull World viewerWorld) {
+       Ref<EntityStore> memberRefObj = memberRef.getReference();
+       Store<EntityStore> memberStore = memberRefObj.getStore();
+       if (memberStore == null) {
+          return null;
+       }
+       World memberWorld = memberStore.getExternalData().getWorld();
+       if (memberWorld == null || !viewerWorld.equals(memberWorld)) {
+          return null;
+       }
+       return (TransformComponent) memberStore.getComponent(memberRefObj, TransformComponent.getComponentType());
+    }
 
    private static class MemberHudState {
       final UUID memberUuid;

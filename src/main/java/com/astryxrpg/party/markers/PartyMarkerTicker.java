@@ -74,8 +74,8 @@ public class PartyMarkerTicker extends TickingSystem<EntityStore> {
             viewer.getWorldMapTracker().setPlayerMapFilter(null);
             this.removeAllMarkersForPlayer(viewerUuid, viewerRef);
          } else {
-            viewer.getWorldMapTracker().setPlayerMapFilter(otherPlayer -> party.isMember(otherPlayer.getUuid()));
-            TransformComponent viewerTransform = viewer.getTransformComponent();
+viewer.getWorldMapTracker().setPlayerMapFilter(otherPlayer -> party.isMember(otherPlayer.getUuid()));
+             TransformComponent viewerTransform = (TransformComponent) store.getComponent(viewerRef.getReference(), TransformComponent.getComponentType());
             if (viewerTransform != null) {
                double viewerX = viewerTransform.getTransform().getPosition().getX();
                double viewerY = viewerTransform.getTransform().getPosition().getY();
@@ -88,9 +88,9 @@ public class PartyMarkerTicker extends TickingSystem<EntityStore> {
 for (UUID memberUuid : party.getMembersExcept(viewerUuid)) {
                    PlayerRef memberRef = Universe.get().getPlayer(memberUuid);
                    if (memberRef != null) {
-                      Player memberPlayer = this.getMemberPlayerSafe(memberRef, viewerWorld, store);
-                     if (memberPlayer != null) {
-                        TransformComponent transform = memberPlayer.getTransformComponent();
+Player memberPlayer = this.getMemberPlayerSafe(memberRef, viewerWorld, store);
+                      if (memberPlayer != null) {
+                         TransformComponent transform = (TransformComponent) store.getComponent(memberRef.getReference(), TransformComponent.getComponentType());
                         if (transform != null) {
                            double memberX = transform.getTransform().getPosition().getX();
                            double memberY = transform.getTransform().getPosition().getY();

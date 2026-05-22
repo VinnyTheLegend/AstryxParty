@@ -369,11 +369,11 @@ public class PartyCommand extends AbstractPlayerCommand {
          context.sendMessage(Message.raw("Party created automatically."));
       }
 
-      Player playerComponent = (Player)store.getComponent(ref, Player.getComponentType());
-      if (playerComponent == null) {
-         context.sendMessage(Message.raw("Could not get player position."));
-      } else {
-         TransformComponent transformComponent = playerComponent.getTransformComponent();
+Player playerComponent = (Player)store.getComponent(ref, Player.getComponentType());
+       if (playerComponent == null) {
+          context.sendMessage(Message.raw("Could not get player position."));
+       } else {
+          TransformComponent transformComponent = (TransformComponent)store.getComponent(ref, TransformComponent.getComponentType());
          if (transformComponent == null) {
             context.sendMessage(Message.raw("Could not get player transform."));
          } else {
