@@ -166,10 +166,11 @@ public class PartyMenuPage extends InteractiveCustomUIPage<PartyMenuEventData> {
             this.loadSettingsFromParty();
             this.refreshUI(ref, store);
             break;
-         case "toggleShowHud":
-            this.mySettingsShowHud = !this.mySettingsShowHud;
-            this.refreshUI(ref, store);
-            break;
+case "toggleShowHud":
+             this.mySettingsShowHud = !this.mySettingsShowHud;
+             this.saveMySettingsToConfig();
+             this.refreshUI(ref, store);
+             break;
          case "toggleShowSelf":
             this.mySettingsShowSelf = !this.mySettingsShowSelf;
             this.saveMySettingsToConfig();
