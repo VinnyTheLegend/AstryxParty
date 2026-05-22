@@ -108,66 +108,66 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
       return minMembersForHud;
    }
 
-public void refreshHudForPlayer(@Nonnull UUID playerUuid) {
-        Party party = AstryxParty.getInstance().getPartyManager().getPartyByPlayer(playerUuid);
-        PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
-        if (state == null) {
-           state = new PartyPlayerListHud.ViewerHudState(playerUuid);
-           state.currentPartyId = party != null ? party.getId() : null;
-           this.viewerStates.put(playerUuid, state);
-        }
+   public void refreshHudForPlayer(@Nonnull UUID playerUuid) {
+      Party party = AstryxParty.getInstance().getPartyManager().getPartyByPlayer(playerUuid);
+      PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
+      if (state == null) {
+         state = new PartyPlayerListHud.ViewerHudState(playerUuid);
+         state.currentPartyId = party != null ? party.getId() : null;
+         this.viewerStates.put(playerUuid, state);
+      }
 
-        PlayerRef playerRef = Universe.get().getPlayer(playerUuid);
-        if (playerRef == null) {
-           return;
-        }
+      PlayerRef playerRef = Universe.get().getPlayer(playerUuid);
+      if (playerRef == null) {
+         return;
+      }
 
-        Ref<EntityStore> ref = playerRef.getReference();
-        if (ref == null) {
-           return;
-        }
+      Ref<EntityStore> ref = playerRef.getReference();
+      if (ref == null) {
+         return;
+      }
 
-        Store<EntityStore> store = ref.getStore();
-        if (store == null) {
-           return;
-        }
+      Store<EntityStore> store = ref.getStore();
+      if (store == null) {
+         return;
+      }
 
-        World world = store.getExternalData().getWorld();
-        if (world == null) {
-           return;
-        }
+      World world = store.getExternalData().getWorld();
+      if (world == null) {
+         return;
+      }
 
-        world.execute(() -> {
-           try {
-              PartyPlayerListHud.ViewerHudState stateInWorld = this.viewerStates.get(playerUuid);
-              if (stateInWorld == null) {
-                 return;
-              }
+      world.execute(() -> {
+         try {
+            PartyPlayerListHud.ViewerHudState stateInWorld = this.viewerStates.get(playerUuid);
+            if (stateInWorld == null) {
+               return;
+            }
 
-              PartySettingsComponent settings = store.getComponent(playerRef.getReference(),
-                    PartySettingsComponent.getComponentType());
-              boolean showHud = settings != null && settings.getShowHud();
+            PartySettingsComponent settings = store.getComponent(playerRef.getReference(),
+                  PartySettingsComponent.getComponentType());
+            boolean showHud = settings != null && settings.getShowHud();
 
-              if (showHud && party != null) {
-                 if (!stateInWorld.hudVisible) {
-                    this.showHudForPlayer(playerUuid, party);
-                 } else {
-                    for (PartyPlayerListHud.MemberHudState memberState : stateInWorld.memberStates.values()) {
-                       memberState.lastHealth = -1.0F;
-                       memberState.lastDistance = -1;
-                    }
-                    if (stateInWorld.hudInstance != null) {
-                       stateInWorld.hudInstance.pushUpdate();
-                    }
-                 }
-              } else if (!showHud && stateInWorld.hudVisible) {
-                 this.hideHudForPlayer(playerUuid);
-              }
-           } catch (Exception e) {
-              ((Api) LOGGER.atWarning()).withCause(e).log("Error in refreshHudForPlayer for %s", playerUuid);
-           }
-        });
-     }
+            if (showHud && party != null) {
+               if (!stateInWorld.hudVisible) {
+                  this.showHudForPlayer(playerUuid, party);
+               } else {
+                  for (PartyPlayerListHud.MemberHudState memberState : stateInWorld.memberStates.values()) {
+                     memberState.lastHealth = -1.0F;
+                     memberState.lastDistance = -1;
+                  }
+                  if (stateInWorld.hudInstance != null) {
+                     stateInWorld.hudInstance.pushUpdate();
+                  }
+               }
+            } else if (!showHud && stateInWorld.hudVisible) {
+               this.hideHudForPlayer(playerUuid);
+            }
+         } catch (Exception e) {
+            ((Api) LOGGER.atWarning()).withCause(e).log("Error in refreshHudForPlayer for %s", playerUuid);
+         }
+      });
+   }
 
    @Override
    public void onPartyEvent(PartyEvent event) {
@@ -286,79 +286,79 @@ public void refreshHudForPlayer(@Nonnull UUID playerUuid) {
       }
    }
 
-private void updateHudVisibility(@Nonnull UUID playerUuid, @Nullable Party party) {
-       PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
-       if (state != null) {
-          if (party != null) {
-             ((Api) LOGGER.atInfo()).log("[DEBUG] Will show HUD for player %s", playerUuid);
-             this.showHudForPlayer(playerUuid, party);
-          } else if (state.hudVisible) {
-             ((Api) LOGGER.atInfo()).log("[DEBUG] Will hide HUD for player %s", playerUuid);
-             this.hideHudForPlayer(playerUuid);
-          }
-       }
-    }
+   private void updateHudVisibility(@Nonnull UUID playerUuid, @Nullable Party party) {
+      PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
+      if (state != null) {
+         if (party != null) {
+            ((Api) LOGGER.atInfo()).log("[DEBUG] Will show HUD for player %s", playerUuid);
+            this.showHudForPlayer(playerUuid, party);
+         } else if (state.hudVisible) {
+            ((Api) LOGGER.atInfo()).log("[DEBUG] Will hide HUD for player %s", playerUuid);
+            this.hideHudForPlayer(playerUuid);
+         }
+      }
+   }
 
-private void showHudForPlayer(@Nonnull UUID playerUuid, @Nonnull Party party) {
-       ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer START for %s", playerUuid);
-       PlayerRef playerRef = Universe.get().getPlayer(playerUuid);
-       if (playerRef == null) {
-          ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: playerRef is null!");
-       } else {
-          Ref<EntityStore> ref = playerRef.getReference();
-          Store<EntityStore> store = ref.getStore();
-          if (store == null) {
-             ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: store is null!");
-             return;
-          }
-          World world = store.getExternalData().getWorld();
-          if (world == null) {
-             ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: world is null!");
-             return;
-          }
-          world.execute(() -> {
-             Store<EntityStore> worldStore = ref.getStore();
-             Player player = (Player) worldStore.getComponent(playerRef.getReference(), Player.getComponentType());
-             if (player == null) {
-                ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Player component is null!");
-             } else {
-                PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
-                if (state == null) {
-                   ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: ViewerHudState is null!");
-} else {
-                    if (state.hudInstance != null) {
-                       ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Reusing existing HUD instance for %s",
-                             playerRef.getUsername());
-                       state.hudInstance.setHudVisible(true);
-                       state.hudVisible = true;
-                       if (MultipleHudCompat.isAvailable()) {
-                          MultipleHudCompat.setCustomHud(player, playerRef, "PartyHud", state.hudInstance);
-                       } else {
-                          player.getHudManager().setCustomHud(playerRef, state.hudInstance);
-                       }
-                       PartyPlayerListHud.this.populateMemberDataForViewer(state, playerRef, player, party, worldStore);
-                    } else {
-                      ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Creating new PartyMemberHud for %s",
-                            playerRef.getUsername());
-                      PartyMemberHud hud = new PartyMemberHud(playerRef);
-                      state.hudInstance = hud;
-                      state.hudVisible = true;
-                      if (MultipleHudCompat.isAvailable()) {
-                         ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Using MultipleHUD.setCustomHud...");
-                         MultipleHudCompat.setCustomHud(player, playerRef, "PartyHud", hud);
-                      } else {
-                         ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Using native setCustomHud...");
-                         player.getHudManager().setCustomHud(playerRef, hud);
-                      }
+   private void showHudForPlayer(@Nonnull UUID playerUuid, @Nonnull Party party) {
+      ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer START for %s", playerUuid);
+      PlayerRef playerRef = Universe.get().getPlayer(playerUuid);
+      if (playerRef == null) {
+         ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: playerRef is null!");
+      } else {
+         Ref<EntityStore> ref = playerRef.getReference();
+         Store<EntityStore> store = ref.getStore();
+         if (store == null) {
+            ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: store is null!");
+            return;
+         }
+         World world = store.getExternalData().getWorld();
+         if (world == null) {
+            ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: world is null!");
+            return;
+         }
+         world.execute(() -> {
+            Store<EntityStore> worldStore = ref.getStore();
+            Player player = (Player) worldStore.getComponent(playerRef.getReference(), Player.getComponentType());
+            if (player == null) {
+               ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Player component is null!");
+            } else {
+               PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
+               if (state == null) {
+                  ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: ViewerHudState is null!");
+               } else {
+                  if (state.hudInstance != null) {
+                     ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Reusing existing HUD instance for %s",
+                           playerRef.getUsername());
+                     state.hudInstance.setHudVisible(true);
+                     state.hudVisible = true;
+                     if (MultipleHudCompat.isAvailable()) {
+                        MultipleHudCompat.setCustomHud(player, playerRef, "PartyHud", state.hudInstance);
+                     } else {
+                        player.getHudManager().setCustomHud(playerRef, state.hudInstance);
+                     }
+                     PartyPlayerListHud.this.populateMemberDataForViewer(state, playerRef, player, party, worldStore);
+                  } else {
+                     ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Creating new PartyMemberHud for %s",
+                           playerRef.getUsername());
+                     PartyMemberHud hud = new PartyMemberHud(playerRef);
+                     state.hudInstance = hud;
+                     state.hudVisible = true;
+                     if (MultipleHudCompat.isAvailable()) {
+                        ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Using MultipleHUD.setCustomHud...");
+                        MultipleHudCompat.setCustomHud(player, playerRef, "PartyHud", hud);
+                     } else {
+                        ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Using native setCustomHud...");
+                        player.getHudManager().setCustomHud(playerRef, hud);
+                     }
 
-                      ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: setCustomHud DONE, hudVisible=true");
-                      PartyPlayerListHud.this.populateMemberDataForViewer(state, playerRef, player, party, worldStore);
-                   }
-                }
-             }
-          });
-       }
-    }
+                     ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: setCustomHud DONE, hudVisible=true");
+                     PartyPlayerListHud.this.populateMemberDataForViewer(state, playerRef, player, party, worldStore);
+                  }
+               }
+            }
+         });
+      }
+   }
 
    private void hideHudForPlayer(@Nonnull UUID playerUuid) {
       PlayerRef playerRef = Universe.get().getPlayer(playerUuid);
@@ -386,111 +386,112 @@ private void showHudForPlayer(@Nonnull UUID playerUuid, @Nonnull Party party) {
                state.hudInstance = null;
                state.hudVisible = false;
             }
-} else if (player.getWorld() == null) {
-             PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
-             if (state != null) {
-                state.hudInstance = null;
-                state.hudVisible = false;
-             }
-          } else {
-             player.getWorld().execute(() -> {
-                try {
-                   PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
-                   if (state != null) {
-                      state.hudVisible = false;
-                      if (state.hudInstance != null) {
-                         state.hudInstance.setHudVisible(false);
-                         state.hudInstance = null;
-                         ((Api) LOGGER.atInfo()).log("[DEBUG] hideHudForPlayer: Called setHudVisible(false) on HUD for %s",
-                               playerUuid);
-                      }
-                   }
-                   if (MultipleHudCompat.isAvailable()) {
-                      ((Api) LOGGER.atInfo()).log("[DEBUG] hideHudForPlayer: Calling MultipleHUD.hideCustomHud for %s",
-                            playerUuid);
-                      MultipleHudCompat.hideCustomHud(player, playerRef, "PartyHud");
-                   }
-                } catch (Exception e) {
-                   ((Api) ((Api) LOGGER.atWarning()).withCause(e))
-                         .log("[DEBUG] hideHudForPlayer: Error hiding HUD for %s", playerUuid);
-                }
-             });
-          }
-       }
+         } else if (player.getWorld() == null) {
+            PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
+            if (state != null) {
+               state.hudInstance = null;
+               state.hudVisible = false;
+            }
+         } else {
+            player.getWorld().execute(() -> {
+               try {
+                  PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
+                  if (state != null) {
+                     state.hudVisible = false;
+                     if (state.hudInstance != null) {
+                        state.hudInstance.setHudVisible(false);
+                        state.hudInstance = null;
+                        ((Api) LOGGER.atInfo()).log(
+                              "[DEBUG] hideHudForPlayer: Called setHudVisible(false) on HUD for %s",
+                              playerUuid);
+                     }
+                  }
+                  if (MultipleHudCompat.isAvailable()) {
+                     ((Api) LOGGER.atInfo()).log("[DEBUG] hideHudForPlayer: Calling MultipleHUD.hideCustomHud for %s",
+                           playerUuid);
+                     MultipleHudCompat.hideCustomHud(player, playerRef, "PartyHud");
+                  }
+               } catch (Exception e) {
+                  ((Api) ((Api) LOGGER.atWarning()).withCause(e))
+                        .log("[DEBUG] hideHudForPlayer: Error hiding HUD for %s", playerUuid);
+               }
+            });
+         }
+      }
    }
 
-public void tick(float dt, int index, Store<EntityStore> store) {
-       float cappedDt = Math.min(dt, STAT_UPDATE_INTERVAL);
-       this.accumulator += cappedDt;
-       this.cleanupAccumulator += cappedDt;
-       if (this.cleanupAccumulator >= CLEANUP_INTERVAL) {
-          this.cleanupAccumulator = 0.0F;
-          this.cleanupOfflinePlayerStates();
-       }
+   public void tick(float dt, int index, Store<EntityStore> store) {
+      float cappedDt = Math.min(dt, STAT_UPDATE_INTERVAL);
+      this.accumulator += cappedDt;
+      this.cleanupAccumulator += cappedDt;
+      if (this.cleanupAccumulator >= CLEANUP_INTERVAL) {
+         this.cleanupAccumulator = 0.0F;
+         this.cleanupOfflinePlayerStates();
+      }
 
-       if (this.accumulator >= STAT_UPDATE_INTERVAL) {
-          this.accumulator = 0.0F;
-          World currentWorld = ((EntityStore) store.getExternalData()).getWorld();
-          if (currentWorld != null) {
-             this.checkForMissingHuds(currentWorld, store);
-          }
-          this.updateAllMemberStats(store);
-       }
-    }
+      if (this.accumulator >= STAT_UPDATE_INTERVAL) {
+         this.accumulator = 0.0F;
+         World currentWorld = ((EntityStore) store.getExternalData()).getWorld();
+         if (currentWorld != null) {
+            this.checkForMissingHuds(currentWorld, store);
+         }
+         this.updateAllMemberStats(store);
+      }
+   }
 
-    private void checkForMissingHuds(@Nonnull World world, @Nonnull Store<EntityStore> store) {
-       PartyManager partyManager = AstryxParty.getInstance().getPartyManager();
+   private void checkForMissingHuds(@Nonnull World world, @Nonnull Store<EntityStore> store) {
+      PartyManager partyManager = AstryxParty.getInstance().getPartyManager();
 
-       for (Player viewer : world.getPlayers()) {
-          UUID playerUuid = viewer.getUuid();
-          Party party = partyManager.getPartyByPlayer(playerUuid);
-          PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
+      for (Player viewer : world.getPlayers()) {
+         UUID playerUuid = viewer.getUuid();
+         Party party = partyManager.getPartyByPlayer(playerUuid);
+         PartyPlayerListHud.ViewerHudState state = this.viewerStates.get(playerUuid);
 
-          if (state == null && party != null) {
-             ((Api) LOGGER.atInfo()).log(
-                   "[DEBUG] checkForMissingHuds: Player %s is in party but has no state - initializing",
-                   playerUuid);
-             state = new PartyPlayerListHud.ViewerHudState(playerUuid);
-             state.currentPartyId = party.getId();
-             this.viewerStates.put(playerUuid, state);
-          }
+         if (state == null && party != null) {
+            ((Api) LOGGER.atInfo()).log(
+                  "[DEBUG] checkForMissingHuds: Player %s is in party but has no state - initializing",
+                  playerUuid);
+            state = new PartyPlayerListHud.ViewerHudState(playerUuid);
+            state.currentPartyId = party.getId();
+            this.viewerStates.put(playerUuid, state);
+         }
 
-          if (state == null) {
-             continue;
-          }
+         if (state == null) {
+            continue;
+         }
 
-          boolean shouldShow = this.shouldShowHud(party, playerUuid, store);
-          if (state.hudVisible && !shouldShow) {
-             ((Api) LOGGER.atInfo()).log("[DEBUG] checkForMissingHuds: Hiding HUD for player %s (ShowHud=false)",
-                   playerUuid);
-             this.hideHudForPlayer(playerUuid);
-          } else if (!state.hudVisible && shouldShow) {
-             ((Api) LOGGER.atInfo()).log("[DEBUG] checkForMissingHuds: Attempting HUD for player %s",
-                   playerUuid);
-             this.showHudForPlayer(playerUuid, party);
-          }
-       }
-    }
+         boolean shouldShow = this.shouldShowHud(party, playerUuid, store);
+         if (state.hudVisible && !shouldShow) {
+            ((Api) LOGGER.atInfo()).log("[DEBUG] checkForMissingHuds: Hiding HUD for player %s (ShowHud=false)",
+                  playerUuid);
+            this.hideHudForPlayer(playerUuid);
+         } else if (!state.hudVisible && shouldShow) {
+            ((Api) LOGGER.atInfo()).log("[DEBUG] checkForMissingHuds: Attempting HUD for player %s",
+                  playerUuid);
+            this.showHudForPlayer(playerUuid, party);
+         }
+      }
+   }
 
-    private boolean shouldShowHud(@Nullable Party party, @Nonnull UUID viewerUuid, @Nonnull Store<EntityStore> store) {
-        if (party == null) {
-           return false;
-        }
+   private boolean shouldShowHud(@Nullable Party party, @Nonnull UUID viewerUuid, @Nonnull Store<EntityStore> store) {
+      if (party == null) {
+         return false;
+      }
 
-        PlayerRef viewerRef = Universe.get().getPlayer(viewerUuid);
-        if (viewerRef == null) {
-           return false;
-        }
+      PlayerRef viewerRef = Universe.get().getPlayer(viewerUuid);
+      if (viewerRef == null) {
+         return false;
+      }
 
-        PartySettingsComponent settings = store.getComponent(viewerRef.getReference(),
-              PartySettingsComponent.getComponentType());
-        if (settings == null || !settings.getShowHud()) {
-           return false;
-        }
+      PartySettingsComponent settings = store.getComponent(viewerRef.getReference(),
+            PartySettingsComponent.getComponentType());
+      if (settings == null || !settings.getShowHud()) {
+         return false;
+      }
 
-        int totalCount = party.getMemberCount() + party.getFakeMembers().size();
-        return totalCount >= minMembersForHud;
-     }
+      int totalCount = party.getMemberCount() + party.getFakeMembers().size();
+      return totalCount >= minMembersForHud;
+   }
 
    private void cleanupOfflinePlayerStates() {
       Iterator<Entry<UUID, PartyPlayerListHud.ViewerHudState>> iterator = this.viewerStates.entrySet().iterator();
