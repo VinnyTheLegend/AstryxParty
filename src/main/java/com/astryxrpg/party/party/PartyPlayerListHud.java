@@ -40,12 +40,12 @@ public class PartyPlayerListHud extends TickingSystem<EntityStore> implements Pa
    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
    private static final PartyPlayerListHud INSTANCE = new PartyPlayerListHud();
    private float accumulator = 0.0F;
-   private static final float STAT_UPDATE_INTERVAL = 1.0F;
+   private static final float STAT_UPDATE_INTERVAL = 0.25F;
    private float cleanupAccumulator = 0.0F;
    private static final float CLEANUP_INTERVAL = 3.0F;
-   private static int minMembersForHud = 1;
-   private final Map<UUID, PartyPlayerListHud.ViewerHudState> viewerStates = new ConcurrentHashMap<>();
-   private final Map<UUID, PartyPlayerListHud.PlayerStatsSnapshot> playerStatsCache = new ConcurrentHashMap<>();
+private static int minMembersForHud = 1;
+    private final Map<UUID, PartyPlayerListHud.ViewerHudState> viewerStates = new ConcurrentHashMap<>();
+    private final Map<UUID, PartyPlayerListHud.PlayerStatsSnapshot> playerStatsCache = new ConcurrentHashMap<>();
 
    private static class PlayerStatsSnapshot {
       final float health;
@@ -968,7 +968,7 @@ private void populateFakeMemberData(
        return (TransformComponent) memberStore.getComponent(memberRefObj, TransformComponent.getComponentType());
     }
 
-private static class MemberHudState {
+    private static class MemberHudState {
        final UUID memberUuid;
        float lastHealth;
        float lastMaxHealth;
@@ -995,24 +995,40 @@ private static class MemberHudState {
                || Math.abs(maxHealth - this.lastMaxHealth) > 0.1F
                || Math.abs(stamina - this.lastStamina) > 0.1F
                || Math.abs(maxStamina - this.lastMaxStamina) > 0.1F
-               || Math.abs(distance - this.lastDistance) > 5
-               || online != this.lastOnline
-               || !name.equals(this.lastName);
-      }
+|| Math.abs(distance - this.lastDistance) > 5
+                || online != this.lastOnline
+                || !name.equals(this.lastName);
+       }
 
-      void update(float health, float maxHealth, float stamina, float maxStamina, int distance, boolean online,
-            String name) {
-         this.lastHealth = health;
-         this.lastMaxHealth = maxHealth;
-         this.lastStamina = stamina;
-         this.lastMaxStamina = maxStamina;
-         this.lastDistance = distance;
-         this.lastOnline = online;
-         this.lastName = name;
-      }
-   }
+       void update(float health, float maxHealth, float stamina, float maxStamina, int distance, boolean online,
+             String name) {
+          this.lastHealth = health;
+          this.lastMaxHealth = maxHealth;
+          this.lastStamina = stamina;
+          this.lastMaxStamina = maxStamina;
+          this.lastDistance = distance;
+          this.lastOnline = online;
+          this.lastName = name;
+       }
+    }
 
-   private static class ViewerHudState {
+    public void notifyStatChangeToParty(@Nonnull Party party, @Nonnull UUID memberUuid, float health, float maxHealth, float stamina, float maxStamina) {
+       for (UUID viewerUuid : party.getMemberUuids()) {
+          PartyPlayerListHud.ViewerHudState viewerState = this.viewerStates.get(viewerUuid);
+          if (viewerState != null && viewerState.hudVisible && viewerState.hudInstance != null) {
+             PartyPlayerListHud.MemberHudState memberState = viewerState.memberStates.get(memberUuid);
+             if (memberState != null) {
+                boolean changed = memberState.hasChanged(health, maxHealth, stamina, maxStamina, memberState.lastDistance, true, memberState.lastName);
+                if (changed) {
+                   memberState.update(health, maxHealth, stamina, maxStamina, memberState.lastDistance, true, memberState.lastName);
+                   viewerState.hudInstance.updateMemberBars(memberUuid, health, maxHealth, stamina, maxStamina);
+                }
+             }
+          }
+       }
+    }
+
+    private static class ViewerHudState {
       final UUID viewerUuid;
       String currentPartyId;
       boolean hudVisible = false;

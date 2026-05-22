@@ -8,7 +8,10 @@ import com.astryxrpg.party.party.PartyManager;
 import com.astryxrpg.party.party.PartyPlayerListHud;
 import com.astryxrpg.party.party.PartyStorage;
 import com.astryxrpg.party.systems.PlayerJoinSystem;
+import com.astryxrpg.party.systems.PartyStatChangeListener;
+import com.hypixel.hytale.component.AddReason;
 import com.hypixel.hytale.component.ComponentType;
+import com.hypixel.hytale.server.core.modules.entitystats.EntityStatsModule;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.logger.HytaleLogger.Api;
@@ -21,7 +24,6 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javax.annotation.Nonnull;
-import com.hypixel.hytale.component.AddReason;
 
 public class AstryxParty extends JavaPlugin {
    private static AstryxParty instance;
@@ -54,12 +56,15 @@ public class AstryxParty extends JavaPlugin {
 private void registerTicker() {
        this.getEntityStoreRegistry().registerSystem(new PlayerJoinSystem());
        ((Api)LOGGER.atInfo()).log("Registered PlayerJoinSystem as RefSystem");
-      this.getEntityStoreRegistry().registerSystem(PartyMarkerTicker.getInstance());
-      ((Api)LOGGER.atInfo()).log("Registered PartyMarkerTicker as TickingSystem");
-      PartyPlayerListHud.getInstance().init();
-      this.getEntityStoreRegistry().registerSystem(PartyPlayerListHud.getInstance());
-      ((Api)LOGGER.atInfo()).log("Registered PartyPlayerListHud as TickingSystem");
-   }
+       this.getEntityStoreRegistry().registerSystem(PartyMarkerTicker.getInstance());
+       ((Api)LOGGER.atInfo()).log("Registered PartyMarkerTicker as TickingSystem");
+       PartyPlayerListHud.getInstance().init();
+       this.getEntityStoreRegistry().registerSystem(PartyPlayerListHud.getInstance());
+       ((Api)LOGGER.atInfo()).log("Registered PartyPlayerListHud as TickingSystem");
+       
+       this.getEntityStoreRegistry().registerSystem(new PartyStatChangeListener(EntityStatsModule.get().getEntityStatMapComponentType()));
+       ((Api)LOGGER.atInfo()).log("Registered PartyStatChangeListener as EntityTickingSystem");
+    }
 
    private void registerPartyMemberIcon() {
       try {
