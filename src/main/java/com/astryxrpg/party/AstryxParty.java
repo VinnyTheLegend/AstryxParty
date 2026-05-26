@@ -8,6 +8,7 @@ import com.astryxrpg.party.party.PartyManager;
 import com.astryxrpg.party.party.PartyPlayerListHud;
 import com.astryxrpg.party.party.PartyStorage;
 import com.astryxrpg.party.systems.PlayerJoinSystem;
+import com.astryxrpg.party.systems.PartyDamageProtectionSystem;
 import com.astryxrpg.party.systems.PartyStatChangeListener;
 import com.hypixel.hytale.component.AddReason;
 import com.hypixel.hytale.component.ComponentType;
@@ -54,17 +55,20 @@ public class AstryxParty extends JavaPlugin {
    }
 
 private void registerTicker() {
-       this.getEntityStoreRegistry().registerSystem(new PlayerJoinSystem());
-       ((Api)LOGGER.atInfo()).log("Registered PlayerJoinSystem as RefSystem");
-       this.getEntityStoreRegistry().registerSystem(PartyMarkerTicker.getInstance());
-       ((Api)LOGGER.atInfo()).log("Registered PartyMarkerTicker as TickingSystem");
-       PartyPlayerListHud.getInstance().init();
-       this.getEntityStoreRegistry().registerSystem(PartyPlayerListHud.getInstance());
-       ((Api)LOGGER.atInfo()).log("Registered PartyPlayerListHud as TickingSystem");
-       
-       this.getEntityStoreRegistry().registerSystem(new PartyStatChangeListener(EntityStatsModule.get().getEntityStatMapComponentType()));
-       ((Api)LOGGER.atInfo()).log("Registered PartyStatChangeListener as EntityTickingSystem");
-    }
+        this.getEntityStoreRegistry().registerSystem(new PlayerJoinSystem());
+        ((Api)LOGGER.atInfo()).log("Registered PlayerJoinSystem as RefSystem");
+        this.getEntityStoreRegistry().registerSystem(PartyMarkerTicker.getInstance());
+        ((Api)LOGGER.atInfo()).log("Registered PartyMarkerTicker as TickingSystem");
+        PartyPlayerListHud.getInstance().init();
+        this.getEntityStoreRegistry().registerSystem(PartyPlayerListHud.getInstance());
+        ((Api)LOGGER.atInfo()).log("Registered PartyPlayerListHud as TickingSystem");
+        
+        this.getEntityStoreRegistry().registerSystem(new PartyStatChangeListener(EntityStatsModule.get().getEntityStatMapComponentType()));
+        ((Api)LOGGER.atInfo()).log("Registered PartyStatChangeListener as EntityTickingSystem");
+        
+        this.getEntityStoreRegistry().registerSystem(new PartyDamageProtectionSystem());
+        ((Api)LOGGER.atInfo()).log("Registered PartyDamageProtectionSystem as DamageEventSystem");
+     }
 
    private void registerPartyMemberIcon() {
       try {
