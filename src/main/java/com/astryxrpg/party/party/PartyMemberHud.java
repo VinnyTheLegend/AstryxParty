@@ -41,7 +41,7 @@ public class PartyMemberHud extends CustomUIHud {
    });
 
    public PartyMemberHud(@Nonnull PlayerRef playerRef) {
-      super(playerRef);
+      super(playerRef, "AstryxParty");
       this.viewerUuid = playerRef.getUuid();
       ((Api)LOGGER.atInfo()).log("PartyMemberHud created for player %s", playerRef.getUsername());
    }

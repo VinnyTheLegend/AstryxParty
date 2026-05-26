@@ -10,8 +10,8 @@ import com.astryxrpg.party.party.PartyPlayerListHud;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.RemoveReason;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
+import com.hypixel.hytale.math.vector.Rotation3f;
+import com.hypixel.hytale.math.vector.Rotation3fc;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
@@ -27,6 +27,11 @@ import com.hypixel.hytale.server.npc.NPCPlugin;
 import it.unimi.dsi.fastutil.Pair;
 import java.util.UUID;
 import javax.annotation.Nonnull;
+
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
+import org.joml.Vector3f;
+import org.joml.Vector3fc;
 
 public class PartyCommand extends AbstractPlayerCommand {
    private final AstryxParty plugin;
@@ -377,9 +382,9 @@ Player playerComponent = (Player)store.getComponent(ref, Player.getComponentType
          if (transformComponent == null) {
             context.sendMessage(Message.raw("Could not get player transform."));
          } else {
-            double px = transformComponent.getTransform().getPosition().getX();
-            double py = transformComponent.getTransform().getPosition().getY();
-            double pz = transformComponent.getTransform().getPosition().getZ();
+            double px = transformComponent.getTransform().getPosition().x();
+            double py = transformComponent.getTransform().getPosition().y();
+            double pz = transformComponent.getTransform().getPosition().z();
             String fakeName = "FakePartyMember_" + fakeCounter++;
             double spawnX = px + 10.0;
             double spawnY = py;
@@ -390,8 +395,8 @@ Player playerComponent = (Player)store.getComponent(ref, Player.getComponentType
             try {
                NPCPlugin npcPlugin = NPCPlugin.get();
                if (npcPlugin != null) {
-                  Vector3d spawnPos = new Vector3d(spawnX, spawnY, spawnZ);
-                  Vector3f rotation = new Vector3f(0.0F, 0.0F, 0.0F);
+                  Vector3dc spawnPos = new Vector3d(spawnX, spawnY, spawnZ);
+                  Rotation3fc rotation = Rotation3f.IDENTITY;
                   Pair<Ref<EntityStore>, INonPlayerCharacter> npcPair = npcPlugin.spawnNPC(store, npcType, null, spawnPos, rotation);
                   if (npcPair != null) {
                      Ref<EntityStore> npcRef = (Ref<EntityStore>)npcPair.first();

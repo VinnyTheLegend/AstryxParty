@@ -8,7 +8,6 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.system.tick.TickingSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.math.vector.Transform;
-import com.hypixel.hytale.math.vector.Vector3d;
 import com.hypixel.hytale.protocol.packets.worldmap.MapMarker;
 import com.hypixel.hytale.protocol.packets.worldmap.UpdateWorldMap;
 import com.hypixel.hytale.server.core.entity.entities.Player;
@@ -27,6 +26,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.joml.Vector3d;
 
 public class PartyMarkerTicker extends TickingSystem<EntityStore> {
    private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
@@ -77,9 +78,9 @@ public class PartyMarkerTicker extends TickingSystem<EntityStore> {
 viewer.getWorldMapTracker().setPlayerMapFilter(otherPlayer -> party.isMember(otherPlayer.getUuid()));
              TransformComponent viewerTransform = (TransformComponent) store.getComponent(viewerRef.getReference(), TransformComponent.getComponentType());
             if (viewerTransform != null) {
-               double viewerX = viewerTransform.getTransform().getPosition().getX();
-               double viewerY = viewerTransform.getTransform().getPosition().getY();
-               double viewerZ = viewerTransform.getTransform().getPosition().getZ();
+               double viewerX = viewerTransform.getTransform().getPosition().x();
+               double viewerY = viewerTransform.getTransform().getPosition().y();
+               double viewerZ = viewerTransform.getTransform().getPosition().z();
                Map<String, PartyMarkerTicker.MarkerState> viewerMarkerStates = this.displayedMarkers
                   .computeIfAbsent(viewerUuid, k -> new ConcurrentHashMap<>());
                Set<String> currentMarkerIds = new HashSet<>();
@@ -92,10 +93,10 @@ Player memberPlayer = this.getMemberPlayerSafe(memberRef, viewerWorld, store);
                       if (memberPlayer != null) {
                          TransformComponent transform = (TransformComponent) store.getComponent(memberRef.getReference(), TransformComponent.getComponentType());
                         if (transform != null) {
-                           double memberX = transform.getTransform().getPosition().getX();
-                           double memberY = transform.getTransform().getPosition().getY();
-                           double memberZ = transform.getTransform().getPosition().getZ();
-                           float memberYaw = transform.getTransform().getRotation().getYaw();
+                           double memberX = transform.getTransform().getPosition().x();
+                           double memberY = transform.getTransform().getPosition().y();
+                           double memberZ = transform.getTransform().getPosition().z();
+                           float memberYaw = transform.getTransform().getRotation().yaw();
                            double dx = memberX - viewerX;
                            double dy = memberY - viewerY;
                            double dz = memberZ - viewerZ;

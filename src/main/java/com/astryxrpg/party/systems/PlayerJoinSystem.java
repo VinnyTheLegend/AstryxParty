@@ -50,7 +50,7 @@ public class PlayerJoinSystem extends RefSystem<EntityStore> {
             ((Api)LOGGER.atInfo()).log("Created PartySettingsComponent for player %s", player.getUuid());
         }
 
-        player.sendMessage(Message.raw("Party system enabled"));
+        playerRef.sendMessage(Message.raw("Party system enabled"));
     }
 
     @Override

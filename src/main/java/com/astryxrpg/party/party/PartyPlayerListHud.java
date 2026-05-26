@@ -352,7 +352,7 @@ public void shutdown() {
                      if (MultipleHudCompat.isAvailable()) {
                         MultipleHudCompat.setCustomHud(player, playerRef, "PartyHud", state.hudInstance);
                      } else {
-                        player.getHudManager().setCustomHud(playerRef, state.hudInstance);
+                        player.getHudManager().addCustomHud(playerRef, state.hudInstance);
                      }
                      PartyPlayerListHud.this.populateMemberDataForViewer(state, playerRef, player, party, worldStore);
                   } else {
@@ -366,7 +366,7 @@ public void shutdown() {
                         MultipleHudCompat.setCustomHud(player, playerRef, "PartyHud", hud);
                      } else {
                         ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: Using native setCustomHud...");
-                        player.getHudManager().setCustomHud(playerRef, hud);
+                        player.getHudManager().addCustomHud(playerRef, hud);
                      }
 
                      ((Api) LOGGER.atInfo()).log("[DEBUG] showHudForPlayer: setCustomHud DONE, hudVisible=true");
@@ -576,9 +576,9 @@ private void updateMemberStatsForViewer(
        UUID viewerUuid = viewerState.viewerUuid;
        TransformComponent viewerTransform = (TransformComponent) store.getComponent(viewerRef.getReference(), TransformComponent.getComponentType());
       if (viewerTransform != null) {
-         double viewerX = viewerTransform.getTransform().getPosition().getX();
-         double viewerY = viewerTransform.getTransform().getPosition().getY();
-         double viewerZ = viewerTransform.getTransform().getPosition().getZ();
+         double viewerX = viewerTransform.getTransform().getPosition().x();
+         double viewerY = viewerTransform.getTransform().getPosition().y();
+         double viewerZ = viewerTransform.getTransform().getPosition().z();
          Party party = AstryxParty.getInstance().getPartyManager().getPartyByPlayer(viewerUuid);
          if (party != null) {
             PartyPlayerListHud.MemberHudState viewerMemberState = viewerState.memberStates.computeIfAbsent(viewerUuid,
@@ -643,9 +643,9 @@ private void updateSingleMemberStats(
 
              TransformComponent transform = this.getMemberTransformSafe(memberRef, currentWorld);
              if (transform != null) {
-                double memberX = transform.getTransform().getPosition().getX();
-                double memberY = transform.getTransform().getPosition().getY();
-                double memberZ = transform.getTransform().getPosition().getZ();
+                double memberX = transform.getTransform().getPosition().x();
+                double memberY = transform.getTransform().getPosition().y();
+                double memberZ = transform.getTransform().getPosition().z();
                 double dx = memberX - viewerX;
                 double dy = memberY - viewerY;
                 double dz = memberZ - viewerZ;
@@ -805,9 +805,9 @@ private void updateSingleMemberStats(
              if (viewerTransform == null) {
                ((Api) LOGGER.atInfo()).log("[DEBUG] populateMemberDataForViewer: transform is null, skipping");
             } else {
-               double viewerX = viewerTransform.getTransform().getPosition().getX();
-               double viewerY = viewerTransform.getTransform().getPosition().getY();
-               double viewerZ = viewerTransform.getTransform().getPosition().getZ();
+               double viewerX = viewerTransform.getTransform().getPosition().x();
+               double viewerY = viewerTransform.getTransform().getPosition().y();
+               double viewerZ = viewerTransform.getTransform().getPosition().z();
                ((Api) LOGGER.atInfo())
                      .log("[DEBUG] populateMemberDataForViewer: Populating %d members + %d fake members",
                            party.getMemberCount(), party.getFakeMembers().size());
@@ -875,9 +875,9 @@ private void populateSingleMemberData(
 
              TransformComponent transform = this.getMemberTransformSafe(memberRef, currentWorld);
              if (transform != null) {
-                double memberX = transform.getTransform().getPosition().getX();
-                double memberY = transform.getTransform().getPosition().getY();
-                double memberZ = transform.getTransform().getPosition().getZ();
+                double memberX = transform.getTransform().getPosition().x();
+                double memberY = transform.getTransform().getPosition().y();
+                double memberZ = transform.getTransform().getPosition().z();
                 double dx = memberX - viewerX;
                 double dy = memberY - viewerY;
                 double dz = memberZ - viewerZ;
