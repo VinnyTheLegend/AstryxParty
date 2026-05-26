@@ -9,9 +9,7 @@ import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.SystemGroup;
 import com.hypixel.hytale.component.query.Query;
-import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.modules.entity.AllLegacyLivingEntityTypesQuery;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageModule;
@@ -22,7 +20,6 @@ import org.checkerframework.checker.nullness.compatqual.NullableDecl;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.UUID;
 
 public class PartyDamageProtectionSystem extends DamageEventSystem {
 
@@ -30,7 +27,7 @@ public class PartyDamageProtectionSystem extends DamageEventSystem {
     private static final Query<EntityStore> QUERY;
 
     static {
-        QUERY = Player.getComponentType();
+        QUERY = Query.and(Player.getComponentType(), PlayerRef.getComponentType());
     }
 
     @Override
@@ -41,26 +38,25 @@ public class PartyDamageProtectionSystem extends DamageEventSystem {
             @NonNullDecl CommandBuffer<EntityStore> commandBuffer,
             @NonNullDecl Damage damage
     ) {
-        Player playerComponent = archetypeChunk.getComponent(i, Player.getComponentType());
-        if (playerComponent == null) return;
+        PlayerRef victim = archetypeChunk.getComponent(i, PlayerRef.getComponentType());
+        if (victim == null) return;
 
         if (!(damage.getSource() instanceof Damage.EntitySource entitySource)) return;
 
         final Ref<EntityStore> attackerRef = entitySource.getRef();
         if (!attackerRef.isValid()) return;
 
-        final PlayerRef attacker = commandBuffer.getComponent(attackerRef, PlayerRef.getComponentType());
+        PlayerRef attacker = commandBuffer.getComponent(attackerRef, PlayerRef.getComponentType());
         if (attacker == null) return;
+
+        if (victim.getUuid().equals(attacker.getUuid())) return;
 
         PartyManager partyManager = AstryxParty.getInstance().getPartyManager();
 
-        final Party attackerParty = partyManager.getPartyByPlayer(attacker.getUuid());
+        Party attackerParty = partyManager.getPartyByPlayer(attacker.getUuid());
         if (attackerParty == null) return;
 
-        final UUIDComponent victimUuid = archetypeChunk.getComponent(i, UUIDComponent.getComponentType());
-        if (victimUuid == null) return;
-
-        final Party victimParty = partyManager.getPartyByPlayer(victimUuid.getUuid());
+        Party victimParty = partyManager.getPartyByPlayer(victim.getUuid());
         if (victimParty == null) return;
 
         if (!attackerParty.getId().equals(victimParty.getId())) return;
